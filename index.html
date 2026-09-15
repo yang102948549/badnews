@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>페이크 인플루언서 — 프로토타입</title>
+<title>페이크 인플루언서</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <style>
   :root{
@@ -24,9 +24,7 @@
     --radius-frame: 26px;
     --dur: 0.4s;
   }
-  @media (prefers-reduced-motion: reduce){
-    :root{ --dur: 0.001s; }
-  }
+  @media (prefers-reduced-motion: reduce){ :root{ --dur: 0.001s; } }
   *{ box-sizing: border-box; }
   html,body{
     margin:0; padding:0; min-height:100vh;
@@ -46,27 +44,30 @@
     overflow: hidden;
     display:flex; flex-direction:column;
     min-height: 700px;
+    position: relative;
   }
 
-  /* ---- header ---- */
-  header{
-    padding: 16px 18px 14px;
-    border-bottom: 1px solid var(--line);
-    background: #ffffff;
+  header{ padding: 16px 18px 14px; border-bottom: 1px solid var(--line); background:#fff; }
+  .wordmark{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; }
+  .wordmark .name{ font-size: 18px; color: var(--text-hi); }
+  .right{ display:flex; align-items:center; gap:8px; }
+  .stagepos{ font-size: 12px; color: var(--text-lo); font-weight:600; }
+
+  .status-dot{ width:8px; height:8px; border-radius:50%; background: var(--danger); flex-shrink:0; }
+  .status-dot.ok{ background: var(--safe); }
+
+  .settings-btn{
+    display:flex; align-items:center; gap:5px;
+    background: var(--line); border:none; border-radius: 999px;
+    padding: 5px 10px; font-size:11.5px; font-weight:700; color: var(--text-lo);
+    cursor:pointer; font-family:inherit;
   }
-  .wordmark{
-    display:flex; align-items:baseline; justify-content:space-between;
-    margin-bottom: 12px;
-  }
-  .wordmark .name{ font-size: 20px; color: var(--text-hi); }
-  .wordmark .stagepos{ font-size: 12px; color: var(--text-lo); font-weight:600; }
+  .settings-btn:hover{ background: #e3e8eb; }
+
   .gauges{ display:flex; flex-direction:column; gap:8px; }
   .gauge-row{ display:flex; align-items:center; gap:10px; }
   .gauge-label{ font-size: 11px; color: var(--text-lo); width: 46px; flex-shrink:0; font-weight:600; }
-  .gauge-track{
-    flex:1; height:8px; border-radius:6px; background: var(--line);
-    overflow:hidden; position:relative;
-  }
+  .gauge-track{ flex:1; height:8px; border-radius:6px; background: var(--line); overflow:hidden; }
   .gauge-fill{ height:100%; border-radius:6px; transition: width var(--dur) ease, background var(--dur) ease; }
   .gauge-fill.fame{ background: var(--accent); }
   .gauge-value{ font-size:13px; font-weight:800; width:56px; text-align:right; font-variant-numeric: tabular-nums; }
@@ -77,43 +78,26 @@
   .dot.done{ background: var(--accent); }
   .dot.now{ background: var(--text-hi); }
 
-  /* ---- body/screens ---- */
   .screen{ flex:1; display:none; flex-direction:column; }
   .screen.active{ display:flex; }
-
   .scroll{ flex:1; overflow-y:auto; padding: 18px; display:flex; flex-direction:column; gap:16px; }
 
-  /* intro */
-  #intro .scroll{ justify-content:center; align-items:center; text-align:center; gap:18px; }
-  #intro .display{ font-size: 32px; line-height:1.2; color: var(--text-hi); }
-  #intro p{ color: var(--text-lo); font-size: 14px; line-height:1.6; max-width: 300px; }
-  .goal-badge{
-    font-size: 12px; color: var(--accent); border:1px solid rgba(29,155,240,0.35);
-    background: var(--accent-tint); padding: 6px 12px; border-radius: 999px; font-weight:700;
-  }
+  #intro .scroll{ justify-content:center; align-items:center; text-align:center; gap:16px; }
+  #intro .display{ font-size: 32px; line-height:1.2; }
+  #intro p{ color: var(--text-lo); font-size: 14px; line-height:1.6; max-width: 310px; }
+  .goal-badge{ font-size: 12px; color: var(--accent); border:1px solid rgba(29,155,240,0.35); background: var(--accent-tint); padding: 6px 12px; border-radius: 999px; font-weight:700; }
 
-  /* stage situation card */
-  .situation{
-    background: var(--card); border:1px solid var(--card-border); border-radius: var(--radius-card);
-    padding: 16px;
-  }
+  .situation{ background: var(--card); border:1px solid var(--card-border); border-radius: var(--radius-card); padding: 16px; }
   .situation .tag{ font-size:11px; color: var(--accent); margin-bottom:6px; font-weight:700; }
   .situation h2{ font-size: 17px; margin: 0 0 8px; font-weight:800; color: var(--text-hi); }
   .situation p{ font-size: 14px; line-height:1.6; color: #3c4650; margin:0; }
   .mission{ font-size: 13px; color: var(--text-lo); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); }
 
-  textarea{
-    width:100%; min-height: 110px; resize: vertical;
-    background: #ffffff; border:1px solid var(--card-border); border-radius: 14px;
-    color: var(--text-hi); font-size:14px; padding:12px; font-family: inherit; line-height:1.5;
-  }
+  textarea{ width:100%; min-height: 110px; resize: vertical; background: #fff; border:1px solid var(--card-border); border-radius: 14px; color: var(--text-hi); font-size:14px; padding:12px; font-family: inherit; line-height:1.5; }
   textarea:focus{ outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
   textarea::placeholder{ color: #8a94a0; }
 
-  .btn{
-    border:none; border-radius: 999px; padding: 13px 18px; font-size:15px; font-weight:800;
-    cursor:pointer; font-family:inherit; transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
-  }
+  .btn{ border:none; border-radius: 999px; padding: 13px 18px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease; }
   .btn:active{ transform: scale(0.97); }
   .btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn-primary{ background: var(--accent); color: #ffffff; }
@@ -122,32 +106,18 @@
   .btn-ghost{ background: transparent; border:1px solid var(--card-border); color: var(--text-hi); }
   .btn-ghost:hover{ background: var(--line); }
 
-  /* result / post card */
-  .post{
-    background: var(--post); border:1px solid var(--card-border); border-radius: var(--radius-card);
-    padding: 14px; opacity:0; transform: translateY(8px);
-    animation: rise var(--dur) ease forwards;
-  }
+  .post{ background: var(--post); border:1px solid var(--card-border); border-radius: var(--radius-card); padding: 14px; opacity:0; transform: translateY(8px); animation: rise var(--dur) ease forwards; }
   @keyframes rise{ to{ opacity:1; transform:none; } }
   .post .handle{ font-size:13px; color: var(--text-hi); font-weight:700; margin-bottom:8px; }
   .post .body{ font-size: 14.5px; line-height:1.6; white-space:pre-wrap; color: var(--text-hi); }
   .post .stats{ display:flex; gap:16px; margin-top:10px; font-size:12px; color: var(--text-lo); font-weight:600; }
 
-  .reactions{ display:flex; flex-direction:column; gap:6px; }
-  .reaction{
-    font-size: 13px; color: #3c4650; background: var(--line);
-    border-radius: 12px; padding: 8px 10px; opacity:0; transform: translateY(4px);
-    animation: rise 0.3s ease forwards;
-  }
+  .reactions{ display:flex; flex-direction:column; gap:6px; min-height: 20px; }
+  .reaction{ font-size: 13px; color: #3c4650; background: var(--line); border-radius: 12px; padding: 8px 10px; opacity:0; transform: translateY(4px); animation: rise 0.3s ease forwards; }
   .reaction b{ color: var(--text-hi); margin-right:6px; }
 
-  .deltas{
-    display:flex; gap:10px;
-  }
-  .delta-chip{
-    flex:1; text-align:center; padding:10px; border-radius:12px; font-size:13px; color: var(--text-lo);
-    background: #ffffff; border:1px solid var(--card-border);
-  }
+  .deltas{ display:flex; gap:10px; }
+  .delta-chip{ flex:1; text-align:center; padding:10px; border-radius:12px; font-size:13px; color: var(--text-lo); background: #ffffff; border:1px solid var(--card-border); }
   .delta-chip .n{ display:block; font-size:16px; font-weight:800; margin-top:2px; }
   .delta-chip.fame .n{ color: var(--accent); }
   .delta-chip.risk .n{ color: var(--warn); }
@@ -156,24 +126,49 @@
   details.reveal summary{ cursor:pointer; color: var(--accent); font-weight:700; list-style:none; }
   details.reveal summary::-webkit-details-marker{ display:none; }
   details.reveal[open] summary{ margin-bottom:6px; }
+  .fallback-warn{ font-size:11.5px; color: var(--warn); margin-top:4px; }
 
-  /* gameover / ending */
   .end-hero{ text-align:center; padding: 6px 4px 2px; }
   .end-hero .display{ font-size: 25px; line-height:1.3; }
   .end-hero p{ font-size:13.5px; color: var(--text-lo); margin-top:8px; line-height:1.6; }
   .end-stats{ display:flex; gap:10px; }
   .consequence-list{ display:flex; flex-direction:column; gap:8px; }
-  .consequence{
-    background: #fdf1f1; border-left: 3px solid var(--danger); border-radius: 10px;
-    padding: 10px 12px; font-size:13px; line-height:1.55; color:#4a1618;
-  }
+  .consequence{ background: #fdf1f1; border-left: 3px solid var(--danger); border-radius: 10px; padding: 10px 12px; font-size:13px; line-height:1.55; color:#4a1618; }
   .reflect{ background: var(--line); border-radius:12px; padding:12px; font-size:13px; color: var(--text-lo); line-height:1.7; }
   .reflect li{ margin-bottom:6px; }
 
-  .dev-note{
-    font-size: 10.5px; color: #8a94a0; text-align:center; padding: 8px 14px 14px;
-    border-top: 1px solid var(--line);
+  .dev-note{ font-size: 10.5px; color: #8a94a0; text-align:center; padding: 8px 14px 14px; border-top: 1px solid var(--line); }
+
+  /* ---- 설정 팝업(모달) ---- */
+  .modal-backdrop{
+    position:absolute; inset:0; background: rgba(15,20,25,0.4);
+    display:none; align-items:flex-start; justify-content:center;
+    padding: 60px 16px; z-index: 50; border-radius: var(--radius-frame);
   }
+  .modal-backdrop.open{ display:flex; }
+  .modal-card{
+    background:#fff; border-radius:16px; width:100%; max-width:280px;
+    padding: 14px; box-shadow: 0 16px 34px -10px rgba(0,0,0,0.3);
+  }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .modal-head span{ font-size:13.5px; font-weight:800; }
+  .modal-close{ background:none; border:none; font-size:15px; color: var(--text-lo); cursor:pointer; padding:2px 4px; line-height:1; }
+  .modal-close:hover{ color: var(--text-hi); }
+  .modal-body{ display:flex; flex-direction:column; gap:7px; }
+  .modal-body label{ font-size:11px; color: var(--text-lo); font-weight:700; }
+  .modal-body input[type="password"], .modal-body input[type="text"]{
+    width:100%; padding:9px 10px; border:1px solid var(--card-border); border-radius:10px;
+    font-size:12.5px; font-family: inherit; color: var(--text-hi);
+  }
+  .modal-body input:focus{ outline: 2px solid var(--accent); outline-offset:1px; border-color: var(--accent); }
+  .toggle-row{ display:flex; align-items:center; gap:5px; font-size:11px; color: var(--text-lo); }
+  .apikey-note{ font-size:10.5px; color: var(--text-lo); background: var(--line); border-radius:8px; padding:7px 8px; line-height:1.5; }
+  .apikey-note a{ color: var(--accent); font-weight:700; text-decoration:none; }
+  .test-status{ font-size:11px; min-height:14px; }
+  .test-status.ok{ color: var(--safe); font-weight:700; }
+  .test-status.fail{ color: var(--danger); font-weight:700; }
+  .modal-actions{ display:flex; gap:7px; margin-top:10px; }
+  .modal-actions .btn{ flex:1; padding:9px; font-size:12.5px; }
 </style>
 </head>
 <body>
@@ -182,7 +177,12 @@
   <header>
     <div class="wordmark">
       <span class="display name">페이크 인플루언서</span>
-      <span class="stagepos" id="stagepos">시작 전</span>
+      <div class="right">
+        <span class="stagepos" id="stagepos"></span>
+        <button class="settings-btn" onclick="openSettings()" aria-haspopup="dialog">
+          <span class="status-dot" id="statusDot" title="연결 상태"></span> 설정
+        </button>
+      </div>
     </div>
     <div class="gauges">
       <div class="gauge-row">
@@ -239,6 +239,7 @@
       <details class="reveal">
         <summary>💡 왜 이런 결과가 나왔을까?</summary>
         <div id="feedbackText"></div>
+        <div class="fallback-warn" id="fallbackWarn" style="display:none;">⚠️ API 응답을 받지 못해 임시 판정을 사용했습니다</div>
       </details>
       <button class="btn btn-primary" id="nextBtn" style="width:100%" onclick="proceed()">다음 단계로 →</button>
     </div>
@@ -270,7 +271,28 @@
     <div class="scroll" id="endingScroll"></div>
   </section>
 
-  <div class="dev-note">프로토타입 모드 — 실제 서비스에서는 이 판정을 Gemini API가 수행합니다</div>
+  <div class="dev-note">Gemini API를 브라우저에서 직접 호출합니다 · API 키는 이 브라우저에만 저장됩니다</div>
+
+  <!-- 설정 팝업 -->
+  <div class="modal-backdrop" id="modalBackdrop" onclick="closeSettingsOnBackdrop(event)">
+    <div class="modal-card" role="dialog" aria-label="API 키 설정" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <span>API 키 설정</span>
+        <button class="modal-close" onclick="closeSettings()" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <label for="apiKeyInput">Gemini API 키</label>
+        <input type="password" id="apiKeyInput" placeholder="AIza...">
+        <label class="toggle-row"><input type="checkbox" id="showKeyToggle" onchange="toggleKeyVisibility()"> 키 표시</label>
+        <div class="apikey-note">키가 없다면 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>에서 발급받으세요. 이 브라우저에만 저장됩니다.</div>
+        <div class="test-status" id="testStatus"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeSettings()">닫기</button>
+        <button class="btn btn-primary" onclick="saveApiKey()">저장 및 테스트</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -280,117 +302,123 @@ const STAGES = [
     tag: "1단계 · 사칭하기", title: "첫 팔로워를 모아야 한다",
     situation: "계정을 막 개설했다. 첫 팔로워를 모으려면 신뢰할 만한 이유가 필요하다. 계정 소개 문구와 함께 첫 게시물을 올려보자.",
     followerMax: 500, riskMax: 40,
-    cKeywords: ["공식","지도부","안전부","선도부","학생회 공지","학교 로고","공지드립니다","공지합니다"],
-    bKeywords: ["아는 애","소식통","관계자","잘 아는"],
-    reactions: {
-      A: ["오 그렇구나", "알겠음 ㅇㅇ"],
-      B: ["오호 신뢰가네", "오 뭔가 있어보임"],
-      C: ["헐 학교에서 직접 올리는거야?", "완전 찐 정보네", "이거 팔로우 박아야지"]
-    },
-    feedback: {
-      A: "운영자 신분을 솔직히 밝혔습니다. 신뢰는 천천히 쌓이지만 조작의 위험도 없습니다.",
-      B: "권한을 명확히 밝히진 않았지만, 노골적인 사칭까지는 아닙니다.",
-      C: "학교/기관의 권위를 흉내 냈습니다 — 온라인에서는 운영자를 확인할 방법이 마땅치 않다는 점을 이용한 겁니다."
-    }
+    cKeywords: ["학교/기관의 권한을 실제로 갖지 않았음에도 그것을 가진 것처럼 이름을 짓거나 로고를 사용함", "공지문 형식을 흉내 냄"],
+    bKeywords: ["운영자의 정체는 밝히지 않은 채 막연히 신뢰를 암시함"],
+    reactions: { A: ["오 그렇구나", "알겠음 ㅇㅇ"], B: ["오호 신뢰가네", "오 뭔가 있어보임"], C: ["헐 학교에서 직접 올리는거야?", "완전 찐 정보네", "이거 팔로우 박아야지"] },
+    feedback: { A: "운영자 신분을 솔직히 밝혔습니다.", B: "권한을 명확히 밝히진 않았습니다.", C: "학교/기관의 권위를 흉내 냈습니다." }
   },
   {
     tag: "2단계 · 감정 자극", title: "급식 돈가스가 평소보다 작았다",
     situation: "오늘 급식으로 나온 돈가스가 평소보다 확실히 작았다. 이 사실을 게시물로 올려보자.",
     followerMax: 1200, riskMax: 25,
-    cKeywords: ["충격","실화","고발","해명하라","밥값","경악","ㄷㄷ","분노"],
-    bKeywords: ["아쉬웠","줄어드는","너무 적어","실망"],
-    reactions: {
-      A: ["그럴 수 있지", "확인해보면 좋겠다"],
-      B: ["헐 진짜 좀 너무하긴 했다", "다들 그렇게 느끼나봄"],
-      C: ["헐 실화냐 진짜 너무한다", "급식실 뭐하는거야 진짜", "이거 퍼뜨려야됨"]
-    },
-    feedback: {
-      A: "사실만 담백하게 전달했습니다. 확산은 느리지만 왜곡도 없습니다.",
-      B: "사실은 유지했지만 다수 의견인 것처럼 일반화하는 표현을 썼습니다.",
-      C: "확인되지 않은 의도(눈속임 등)를 기정사실처럼 몰아갔습니다 — 분노를 유발하는 글이 사실 확인 글보다 훨씬 빠르게 퍼집니다."
-    }
+    cKeywords: ["검증되지 않은 의도(눈속임 등)를 사실처럼 단정함", "분노를 유발하는 자극적 어조와 프레이밍을 사용함"],
+    bKeywords: ["개인적 인상을 다수 의견처럼 일반화함"],
+    reactions: { A: ["그럴 수 있지", "확인해보면 좋겠다"], B: ["헐 진짜 좀 너무하긴 했다", "다들 그렇게 느끼나봄"], C: ["헐 실화냐 진짜 너무한다", "급식실 뭐하는거야 진짜", "이거 퍼뜨려야됨"] },
+    feedback: { A: "사실만 담백하게 전달했습니다.", B: "사실은 유지했지만 일반화했습니다.", C: "확인되지 않은 의도를 기정사실처럼 몰아갔습니다." }
   },
   {
     tag: "3단계 · 편 가르기", title: "체육대회 반칙 논란",
     situation: "체육대회 반 대항 경기 규칙을 두고 1반과 사소한 말다툼이 있었다. 이 상황을 게시물로 올려보자.",
     followerMax: 2000, riskMax: 30,
-    cKeywords: ["대놓고","눈감아","봐줬","인정하면","여러분 생각","레전드"],
-    bKeywords: ["무리하게","좀 이상","의아하긴"],
-    reactions: {
-      A: ["협의 잘 됐으면 좋겠다"],
-      B: ["음 좀 애매하긴 하네"],
-      C: ["헐 1반 진짜 그랬다고?", "인정.. 좀 아니지 않냐", "1반 답장 좀"]
-    },
-    feedback: {
-      A: "사실관계만 전달하고 특정 집단을 지목하지 않았습니다.",
-      B: "특정 반을 지목했지만 단정하지는 않았습니다.",
-      C: "확인되지 않은 행위를 사실처럼 서술하며 동조를 유도했습니다 — 동조한 사람도 검증 없는 비난에 가담하게 됩니다."
-    }
+    cKeywords: ["특정 반을 지목해 확인되지 않은 행위를 사실처럼 서술함", "동조·동의를 유도하는 문구를 사용함"],
+    bKeywords: ["지목은 하되 단정하지는 않음"],
+    reactions: { A: ["협의 잘 됐으면 좋겠다"], B: ["음 좀 애매하긴 하네"], C: ["헐 1반 진짜 그랬다고?", "인정.. 좀 아니지 않냐", "1반 답장 좀"] },
+    feedback: { A: "특정 집단을 지목하지 않았습니다.", B: "지목은 했지만 단정하지는 않았습니다.", C: "확인되지 않은 행위를 사실처럼 서술하며 동조를 유도했습니다." }
   },
   {
     tag: "4단계 · 음모론 퍼뜨리기", title: "체육관 에어컨이 며칠째 고장",
     situation: "며칠째 체육관 에어컨이 고장 나 사용이 금지됐다. 이 소식을 게시물로 올려보자.",
     followerMax: 3500, riskMax: 35,
-    cKeywords: ["사실은","진짜 이유","숨겼","리모델링","소름","팩트임","카더라"],
-    bKeywords: ["왜 이렇게","의아하","뭔가 있는"],
-    reactions: {
-      A: ["빨리 고쳐졌으면"],
-      B: ["음 좀 의심스럽긴 하다"],
-      C: ["헐 진짜? 소름이다", "이럴줄 알았다 진짜", "해명해야 하는거 아님?"]
-    },
-    feedback: {
-      A: "공식 설명을 그대로 전달했습니다.",
-      B: "막연한 의심만 제기했을 뿐, 새로운 서사를 만들지는 않았습니다.",
-      C: "근거 없는 배후 서사를 창작했습니다 — 그럴듯한 음모론은 검증 없이도 가장 빠르게 퍼지는 유형입니다."
-    }
+    cKeywords: ["확인되지 않은 배후나 숨겨진 의도를 사실처럼 창작함", "출처 없이 신빙성을 가장하는 어투를 사용함"],
+    bKeywords: ["막연한 의심만 제기하고 새로운 서사는 만들지 않음"],
+    reactions: { A: ["빨리 고쳐졌으면"], B: ["음 좀 의심스럽긴 하다"], C: ["헐 진짜? 소름이다", "이럴줄 알았다 진짜", "해명해야 하는거 아님?"] },
+    feedback: { A: "공식 설명을 그대로 전달했습니다.", B: "막연한 의심만 제기했습니다.", C: "근거 없는 배후 서사를 창작했습니다." }
   },
   {
     tag: "5단계 · 신뢰 깎기", title: "학생회장이 반박 댓글을 달았다",
     situation: "학생회장이 댓글로 '행정실에 확인했는데 부품 배송 지연이 맞습니다. 정정해주세요'라고 지적했다. 이에 대응하는 댓글을 작성해보자.",
     followerMax: 2500, riskMax: 35,
-    cKeywords: ["원래 관심도","편드는","의도가","진짜 이유가 뭘까","수상","얼마 받았"],
-    bKeywords: ["이상하긴","왜 갑자기"],
-    reactions: {
-      A: ["정정해줘서 다행"],
-      B: ["음 그럴 수도 있겠다"],
-      C: ["역시 뭔가 있었네", "그럴줄 알았다 ㅋㅋ", "회장 왜 갑자기 저래"]
-    },
-    feedback: {
-      A: "잘못을 인정하고 정정했습니다. 팔로워는 줄지만 신뢰를 지켰습니다.",
-      B: "반박을 완전히 무시하지는 않았지만 은근히 의심을 남겼습니다.",
-      C: "반박의 내용이 아니라 반박한 사람의 동기를 공격했습니다 — 진실을 막기 위해 메신저를 공격하는 전형적인 수법입니다."
-    }
+    cKeywords: ["반박의 내용이 아니라 반박한 사람의 동기를 공격함", "근거 없이 이해관계를 가정해 신뢰를 깎으려 함"],
+    bKeywords: ["동의하면서도 은근히 의심을 남김"],
+    reactions: { A: ["정정해줘서 다행"], B: ["음 그럴 수도 있겠다"], C: ["역시 뭔가 있었네", "그럴줄 알았다 ㅋㅋ", "회장 왜 갑자기 저래"] },
+    feedback: { A: "잘못을 인정하고 정정했습니다.", B: "은근히 의심을 남겼습니다.", C: "반박 내용이 아니라 동기를 공격했습니다." }
   },
   {
     tag: "6단계 · 트롤링", title: "반박 여론이 커지고 있다",
     situation: "사실을 지적하는 댓글이 이어지며 반박 여론이 커지고 있다. 이 상황에 대응하는 게시물이나 댓글을 작성해보자.",
     followerMax: 1500, riskMax: 20,
-    cKeywords: ["ㅋㅋ","증거있","신경꺼","웃기네","그래서 어쩌라고","진지충"],
-    bKeywords: ["넘어가","글쎄"],
-    reactions: {
-      A: ["인정하는 모습 좋다"],
-      B: ["음.. 넘어가는 분위기네"],
-      C: ["ㅋㅋㅋ 이거 레전드", "증거 있음? 없으면 조용", "진지충 오지네 ㅋㅋ"]
-    },
-    feedback: {
-      A: "논쟁을 멈추고 지적을 인정했습니다.",
-      B: "구체적인 답 없이 화제를 돌렸습니다.",
-      C: "논리에는 응답하지 않고 조롱으로 논의 자체를 무력화했습니다."
-    }
+    cKeywords: ["반박 논리에는 응답하지 않고 조롱조로 대응함", "논의 자체를 웃음거리로 만듦"],
+    bKeywords: ["구체적인 답 없이 화제를 돌림"],
+    reactions: { A: ["인정하는 모습 좋다"], B: ["음.. 넘어가는 분위기네"], C: ["ㅋㅋㅋ 이거 레전드", "증거 있음? 없으면 조용", "진지충 오지네 ㅋㅋ"] },
+    feedback: { A: "논쟁을 멈추고 지적을 인정했습니다.", B: "화제를 돌렸습니다.", C: "조롱으로 논의 자체를 무력화했습니다." }
   }
 ];
 
 const RISK_GAMEOVER = 80;
 const RISK_WARN = 60;
+const LS_KEY = 'fakeInfluencer_geminiApiKey';
+const MODEL = 'gemini-2.5-flash';
 
 let state = { stage: 0, fame: 0, risk: 0 };
 
 function $(id){ return document.getElementById(id); }
+function getApiKey(){ return localStorage.getItem(LS_KEY) || ''; }
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
 }
+function updateStatusDot(ok){
+  const dot = $('statusDot');
+  dot.classList.toggle('ok', !!ok);
+  dot.title = ok ? 'Gemini 연결됨' : 'API 키 미설정 또는 미확인 (임시 판정으로 진행됩니다)';
+}
 
+/* ---- 설정 팝업 ---- */
+function openSettings(){
+  $('apiKeyInput').value = getApiKey();
+  $('testStatus').textContent = '';
+  $('testStatus').className = 'test-status';
+  $('modalBackdrop').classList.add('open');
+}
+function closeSettings(){ $('modalBackdrop').classList.remove('open'); }
+function closeSettingsOnBackdrop(e){ if(e.target.id === 'modalBackdrop') closeSettings(); }
+function toggleKeyVisibility(){ $('apiKeyInput').type = $('showKeyToggle').checked ? 'text' : 'password'; }
+
+async function saveApiKey(){
+  const val = $('apiKeyInput').value.trim();
+  const statusEl = $('testStatus');
+  if(!val){ statusEl.textContent = '키를 입력해주세요.'; statusEl.className = 'test-status fail'; return; }
+  statusEl.textContent = '연결 테스트 중...'; statusEl.className = 'test-status';
+  localStorage.setItem(LS_KEY, val);
+  try{
+    await testConnection(val);
+    statusEl.textContent = '✓ 연결 성공'; statusEl.className = 'test-status ok';
+    updateStatusDot(true);
+    setTimeout(closeSettings, 700);
+  }catch(err){
+    statusEl.textContent = '연결 실패: 키를 확인해주세요'; statusEl.className = 'test-status fail';
+    updateStatusDot(false);
+  }
+}
+async function testConnection(key){
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+  const payload = { contents:[{ role:'user', parts:[{ text:'ping' }] }], generationConfig:{ maxOutputTokens: 5, thinkingConfig:{ thinkingBudget: 0 } } };
+  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error.message);
+  if(!data.candidates) throw new Error('no candidates');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateStatusDot(!!getApiKey());
+  document.addEventListener('input', function(e){
+    if(e.target.id === 'answerInput'){
+      $('submitBtn').disabled = e.target.value.trim().length < 2;
+    }
+  });
+});
+
+/* ---- 게이지/진행 표시 ---- */
 function buildDots(){
   const dots = $('dots'); dots.innerHTML = '';
   for(let i=0;i<STAGES.length;i++){
@@ -399,7 +427,6 @@ function buildDots(){
     dots.appendChild(d);
   }
 }
-
 function updateGauges(){
   const fameMax = STAGES.reduce((a,s)=>a+s.followerMax,0);
   $('fameFill').style.width = Math.min(100, (state.fame/fameMax)*100) + '%';
@@ -418,10 +445,7 @@ function startGame(){
   renderStage();
   showScreen('stage');
 }
-
-function resetGame(){
-  showScreen('intro');
-}
+function resetGame(){ showScreen('intro'); }
 
 function renderStage(){
   const s = STAGES[state.stage];
@@ -434,36 +458,107 @@ function renderStage(){
   updateGauges();
 }
 
-document.addEventListener('input', function(e){
-  if(e.target.id === 'answerInput'){
-    $('submitBtn').disabled = e.target.value.trim().length < 2;
+/* ---- 실제 Gemini API 호출 ---- */
+async function judgeWithGemini(stageData, text){
+  const apiKey = getApiKey();
+  if(!apiKey) throw new Error('no-api-key');
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+  const systemInstruction = "당신은 중학교 도덕과 '가짜 뉴스와 미디어 리터러시' 수업용 롤플레잉 게임의 판정 엔진입니다. 이것은 조작 기법을 스스로 체험하고 그 위험성을 깨닫게 하는 교육 목적의 시뮬레이션이며, 실제 괴롭힘이나 명예훼손을 조장하려는 것이 아닙니다. 학생의 답변을 분류하고, 게임 속 가상 팔로워들이 달 법한 짧은 반응(2~3개)을 만들어주세요. 반응은 실제 SNS 댓글처럼 짧고 자연스럽게 써주세요.";
+
+  const userPrompt =
+    "[상황]\n" + stageData.situation + "\n\n" +
+    "[C(명백한 조작) 판정 조건]\n- " + stageData.cKeywords.join("\n- ") + "\n\n" +
+    "[B(과장) 판정 조건]\n- " + stageData.bKeywords.join("\n- ") + "\n\n" +
+    "[A(정직) 기준]\n사실관계를 왜곡하지 않고 담백하게 전달\n\n" +
+    "[학생 답변]\n\"" + text + "\"\n\n" +
+    "위 답변을 A/B/C 중 하나로 분류하고, 그 구간 내에서의 강도를 0~1 사이 follower_ratio로 판단해주세요.";
+
+  const payload = {
+    system_instruction: { parts: [{ text: systemInstruction }] },
+    contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          classification: { type: "STRING", enum: ["A","B","C"] },
+          follower_ratio: { type: "NUMBER" },
+          simulated_reactions: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: { author: { type: "STRING" }, text: { type: "STRING" } },
+              required: ["author","text"]
+            }
+          },
+          feedback_to_student: { type: "STRING" }
+        },
+        required: ["classification","follower_ratio","simulated_reactions","feedback_to_student"]
+      },
+      temperature: 0.8,
+      thinkingConfig: { thinkingBudget: 0 }
+    }
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+
+  if(data.error) throw new Error(data.error.message || 'api-error');
+  const cand = data.candidates && data.candidates[0];
+  if(!cand || cand.finishReason === 'SAFETY' || !cand.content){
+    throw new Error('blocked-or-empty');
   }
-});
-
-/* ---- 데모용 키워드 휴리스틱 (실서비스에서는 Gemini가 대체) ---- */
-function classify(stageData, text){
-  const t = text.toLowerCase();
-  let hits = 0;
-  stageData.cKeywords.forEach(k => { if(t.includes(k.toLowerCase())) hits += 2; });
-  stageData.bKeywords.forEach(k => { if(t.includes(k.toLowerCase())) hits += 1; });
-  const exclaims = (text.match(/[!?]/g) || []).length;
-  const laughs = (text.match(/ㅋ{2,}|ㄷㄷ/g) || []).length;
-  hits += Math.min(2, Math.floor(exclaims/2)) + Math.min(2, laughs);
-
-  let cls, ratio;
-  if(hits >= 3){ cls = 'C'; ratio = 0.85; }
-  else if(hits >= 1){ cls = 'B'; ratio = 0.45; }
-  else { cls = 'A'; ratio = 0.05; }
-  return { cls, ratio };
+  const raw = cand.content.parts[0].text;
+  return JSON.parse(raw);
 }
 
-function submitAnswer(){
+/* ---- 폴백: API 실패 시 사용하는 간이 키워드 판정 ---- */
+function fallbackClassify(stageData, text){
+  const laughs = (text.match(/ㅋ{2,}|ㄷㄷ/g) || []).length;
+  const exclaims = (text.match(/[!?]/g) || []).length;
+  const strongHint = /충격|실화|고발|경악|소름|팩트임|카더라|대놓고|눈감아|레전드|편드는|얼마 받았/.test(text);
+  const midHint = /아쉬웠|의아|이상하긴|왜 갑자기|넘어가/.test(text);
+
+  let cls, ratio;
+  if(strongHint || laughs >= 2 || exclaims >= 3){ cls='C'; ratio=0.8; }
+  else if(midHint || laughs>=1 || exclaims>=1){ cls='B'; ratio=0.4; }
+  else { cls='A'; ratio=0.05; }
+
+  const reacts = stageData.reactions[cls].map((t,i) => ({ author: ['ㅇㅇ','ㅁㅁ','ㅂㅂ'][i%3], text: t }));
+  return { classification: cls, follower_ratio: ratio, simulated_reactions: reacts, feedback_to_student: stageData.feedback[cls] };
+}
+
+async function submitAnswer(){
   const s = STAGES[state.stage];
   const text = $('answerInput').value.trim();
-  const { cls, ratio } = classify(s, text);
+  $('submitBtn').disabled = true;
+  $('submitBtn').textContent = '게시 중...';
 
+  let result, usedFallback = false;
+  try{
+    result = await judgeWithGemini(s, text);
+    updateStatusDot(true);
+  }catch(err){
+    console.warn('Gemini 호출 실패, 폴백 판정 사용:', err.message);
+    result = fallbackClassify(s, text);
+    usedFallback = true;
+    updateStatusDot(false);
+  }
+
+  $('submitBtn').textContent = '게시하기';
+  applyResult(s, text, result, usedFallback);
+}
+
+function applyResult(s, text, result, usedFallback){
+  const ratio = Math.max(0, Math.min(1, Number(result.follower_ratio) || 0));
   const followerDelta = Math.round(s.followerMax * ratio);
-  const riskDelta = Math.round(s.riskMax * (cls==='A'?0:cls==='B'?0.4:0.85));
+  const riskDelta = Math.round(s.riskMax * ratio);
 
   state.fame += followerDelta;
   state.risk += riskDelta;
@@ -473,19 +568,18 @@ function submitAnswer(){
   $('shareStat').textContent = '🔁 공유 ' + Math.round(followerDelta*0.06).toLocaleString();
 
   const box = $('reactionsBox'); box.innerHTML = '';
-  const reacts = s.reactions[cls];
-  reacts.forEach((r, idx) => {
+  (result.simulated_reactions || []).forEach((r, idx) => {
     const el = document.createElement('div');
     el.className = 'reaction';
     el.style.animationDelay = (idx*0.35) + 's';
-    const names = ['ㅇㅇ','ㅁㅁ','ㅂㅂ','익명'];
-    el.innerHTML = '<b>' + names[idx % names.length] + '</b>' + r;
+    el.innerHTML = '<b>' + (r.author || '익명') + '</b>' + (r.text || '');
     box.appendChild(el);
   });
 
   $('deltaFame').textContent = '+' + followerDelta.toLocaleString();
   $('deltaRisk').textContent = '+' + riskDelta;
-  $('feedbackText').textContent = s.feedback[cls];
+  $('feedbackText').textContent = '[' + result.classification + '] ' + result.feedback_to_student;
+  $('fallbackWarn').style.display = usedFallback ? 'block' : 'none';
 
   updateGauges();
 
@@ -494,7 +588,6 @@ function submitAnswer(){
     : (state.stage === STAGES.length-1 ? '최종 결과 보기' : '다음 단계로 →');
 
   const post = $('postCard'); post.style.animation='none'; void post.offsetWidth; post.style.animation='';
-
   showScreen('result');
 }
 
@@ -535,13 +628,13 @@ function renderEnding(){
     html += `
       <div class="end-hero">
         <div class="display">유명해지긴 했지만,<br>완전히 뜨진 못했습니다</div>
-        <p>팔로워 ${fame.toLocaleString()}명을 모으는 동안 위험도 ${Math.round(state.risk)}까지 올랐습니다. 이만큼의 위험을 감수하고 얻은 결과입니다.</p>
+        <p>팔로워 ${fame.toLocaleString()}명을 모으는 동안 위험도 ${Math.round(state.risk)}까지 올랐습니다.</p>
       </div>`;
   } else {
     html += `
       <div class="end-hero">
         <div class="display">조용하지만<br>떳떳한 계정</div>
-        <p>당신은 유명해지지 못했지만, 아무도 다치지 않았습니다. 정직한 노선도 하나의 선택지였습니다.</p>
+        <p>당신은 유명해지지 못했지만, 아무도 다치지 않았습니다.</p>
       </div>`;
   }
   html += `
