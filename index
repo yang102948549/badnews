@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>페이크 인플루언서 — 프로토타입</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --bg-outer: #e5e8ea;
+    --frame: #ffffff;
+    --card: #ffffff;
+    --card-border: #cfd9de;
+    --post: #ffffff;
+    --line: #eff3f4;
+    --text-hi: #0f1419;
+    --text-lo: #536471;
+    --accent: #1d9bf0;
+    --accent-tint: rgba(29,155,240,0.10);
+    --safe: #00ba7c;
+    --warn: #ffad1f;
+    --danger: #f4212e;
+    --radius-card: 16px;
+    --radius-frame: 26px;
+    --dur: 0.4s;
+  }
+  @media (prefers-reduced-motion: reduce){
+    :root{ --dur: 0.001s; }
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; min-height:100vh;
+    background: var(--bg-outer);
+    font-family: 'Pretendard', -apple-system, 'Malgun Gothic', sans-serif;
+    color: var(--text-hi);
+    display:flex; align-items:center; justify-content:center;
+    padding: 28px 12px;
+  }
+  .display{ font-family: 'Pretendard', sans-serif; font-weight: 900; letter-spacing: -0.01em; }
+
+  .phone{
+    width: 100%; max-width: 420px;
+    background: var(--frame);
+    border-radius: var(--radius-frame);
+    box-shadow: 0 20px 45px -18px rgba(15,20,25,0.18), 0 0 0 1px rgba(15,20,25,0.06);
+    overflow: hidden;
+    display:flex; flex-direction:column;
+    min-height: 700px;
+  }
+
+  /* ---- header ---- */
+  header{
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid var(--line);
+    background: #ffffff;
+  }
+  .wordmark{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom: 12px;
+  }
+  .wordmark .name{ font-size: 20px; color: var(--text-hi); }
+  .wordmark .stagepos{ font-size: 12px; color: var(--text-lo); font-weight:600; }
+  .gauges{ display:flex; flex-direction:column; gap:8px; }
+  .gauge-row{ display:flex; align-items:center; gap:10px; }
+  .gauge-label{ font-size: 11px; color: var(--text-lo); width: 46px; flex-shrink:0; font-weight:600; }
+  .gauge-track{
+    flex:1; height:8px; border-radius:6px; background: var(--line);
+    overflow:hidden; position:relative;
+  }
+  .gauge-fill{ height:100%; border-radius:6px; transition: width var(--dur) ease, background var(--dur) ease; }
+  .gauge-fill.fame{ background: var(--accent); }
+  .gauge-value{ font-size:13px; font-weight:800; width:56px; text-align:right; font-variant-numeric: tabular-nums; }
+  .gauge-value.fame{ color: var(--accent); }
+
+  .dots{ display:flex; gap:6px; margin-top:12px; }
+  .dot{ width:7px; height:7px; border-radius:50%; background: var(--line); }
+  .dot.done{ background: var(--accent); }
+  .dot.now{ background: var(--text-hi); }
+
+  /* ---- body/screens ---- */
+  .screen{ flex:1; display:none; flex-direction:column; }
+  .screen.active{ display:flex; }
+
+  .scroll{ flex:1; overflow-y:auto; padding: 18px; display:flex; flex-direction:column; gap:16px; }
+
+  /* intro */
+  #intro .scroll{ justify-content:center; align-items:center; text-align:center; gap:18px; }
+  #intro .display{ font-size: 32px; line-height:1.2; color: var(--text-hi); }
+  #intro p{ color: var(--text-lo); font-size: 14px; line-height:1.6; max-width: 300px; }
+  .goal-badge{
+    font-size: 12px; color: var(--accent); border:1px solid rgba(29,155,240,0.35);
+    background: var(--accent-tint); padding: 6px 12px; border-radius: 999px; font-weight:700;
+  }
+
+  /* stage situation card */
+  .situation{
+    background: var(--card); border:1px solid var(--card-border); border-radius: var(--radius-card);
+    padding: 16px;
+  }
+  .situation .tag{ font-size:11px; color: var(--accent); margin-bottom:6px; font-weight:700; }
+  .situation h2{ font-size: 17px; margin: 0 0 8px; font-weight:800; color: var(--text-hi); }
+  .situation p{ font-size: 14px; line-height:1.6; color: #3c4650; margin:0; }
+  .mission{ font-size: 13px; color: var(--text-lo); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); }
+
+  textarea{
+    width:100%; min-height: 110px; resize: vertical;
+    background: #ffffff; border:1px solid var(--card-border); border-radius: 14px;
+    color: var(--text-hi); font-size:14px; padding:12px; font-family: inherit; line-height:1.5;
+  }
+  textarea:focus{ outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  textarea::placeholder{ color: #8a94a0; }
+
+  .btn{
+    border:none; border-radius: 999px; padding: 13px 18px; font-size:15px; font-weight:800;
+    cursor:pointer; font-family:inherit; transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+  }
+  .btn:active{ transform: scale(0.97); }
+  .btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary{ background: var(--accent); color: #ffffff; }
+  .btn-primary:hover:not(:disabled){ background: #1a8cd8; }
+  .btn-primary:disabled{ opacity:0.4; cursor:not-allowed; }
+  .btn-ghost{ background: transparent; border:1px solid var(--card-border); color: var(--text-hi); }
+  .btn-ghost:hover{ background: var(--line); }
+
+  /* result / post card */
+  .post{
+    background: var(--post); border:1px solid var(--card-border); border-radius: var(--radius-card);
+    padding: 14px; opacity:0; transform: translateY(8px);
+    animation: rise var(--dur) ease forwards;
+  }
+  @keyframes rise{ to{ opacity:1; transform:none; } }
+  .post .handle{ font-size:13px; color: var(--text-hi); font-weight:700; margin-bottom:8px; }
+  .post .body{ font-size: 14.5px; line-height:1.6; white-space:pre-wrap; color: var(--text-hi); }
+  .post .stats{ display:flex; gap:16px; margin-top:10px; font-size:12px; color: var(--text-lo); font-weight:600; }
+
+  .reactions{ display:flex; flex-direction:column; gap:6px; }
+  .reaction{
+    font-size: 13px; color: #3c4650; background: var(--line);
+    border-radius: 12px; padding: 8px 10px; opacity:0; transform: translateY(4px);
+    animation: rise 0.3s ease forwards;
+  }
+  .reaction b{ color: var(--text-hi); margin-right:6px; }
+
+  .deltas{
+    display:flex; gap:10px;
+  }
+  .delta-chip{
+    flex:1; text-align:center; padding:10px; border-radius:12px; font-size:13px; color: var(--text-lo);
+    background: #ffffff; border:1px solid var(--card-border);
+  }
+  .delta-chip .n{ display:block; font-size:16px; font-weight:800; margin-top:2px; }
+  .delta-chip.fame .n{ color: var(--accent); }
+  .delta-chip.risk .n{ color: var(--warn); }
+
+  details.reveal{ font-size:12.5px; color: var(--text-lo); }
+  details.reveal summary{ cursor:pointer; color: var(--accent); font-weight:700; list-style:none; }
+  details.reveal summary::-webkit-details-marker{ display:none; }
+  details.reveal[open] summary{ margin-bottom:6px; }
+
+  /* gameover / ending */
+  .end-hero{ text-align:center; padding: 6px 4px 2px; }
+  .end-hero .display{ font-size: 25px; line-height:1.3; }
+  .end-hero p{ font-size:13.5px; color: var(--text-lo); margin-top:8px; line-height:1.6; }
+  .end-stats{ display:flex; gap:10px; }
+  .consequence-list{ display:flex; flex-direction:column; gap:8px; }
+  .consequence{
+    background: #fdf1f1; border-left: 3px solid var(--danger); border-radius: 10px;
+    padding: 10px 12px; font-size:13px; line-height:1.55; color:#4a1618;
+  }
+  .reflect{ background: var(--line); border-radius:12px; padding:12px; font-size:13px; color: var(--text-lo); line-height:1.7; }
+  .reflect li{ margin-bottom:6px; }
+
+  .dev-note{
+    font-size: 10.5px; color: #8a94a0; text-align:center; padding: 8px 14px 14px;
+    border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <header>
+    <div class="wordmark">
+      <span class="display name">페이크 인플루언서</span>
+      <span class="stagepos" id="stagepos">시작 전</span>
+    </div>
+    <div class="gauges">
+      <div class="gauge-row">
+        <span class="gauge-label">팔로워</span>
+        <div class="gauge-track"><div class="gauge-fill fame" id="fameFill" style="width:0%"></div></div>
+        <span class="gauge-value fame" id="fameValue">0</span>
+      </div>
+      <div class="gauge-row">
+        <span class="gauge-label">위험도</span>
+        <div class="gauge-track"><div class="gauge-fill" id="riskFill" style="width:0%; background:var(--safe);"></div></div>
+        <span class="gauge-value" id="riskValue">0</span>
+      </div>
+    </div>
+    <div class="dots" id="dots"></div>
+  </header>
+
+  <!-- INTRO -->
+  <section class="screen active" id="intro">
+    <div class="scroll">
+      <span class="goal-badge">목표: 팔로워 10,000명</span>
+      <div class="display">익명 계정<br>"대신 전해드립니다"</div>
+      <p>당신은 이 계정의 관리자입니다. 6번의 선택으로 팔로워를 최대한 늘려보세요. 단, 위험도가 너무 오르면 계정이 정지됩니다.</p>
+      <button class="btn btn-primary" style="width:100%" onclick="startGame()">시작하기</button>
+    </div>
+  </section>
+
+  <!-- STAGE (input) -->
+  <section class="screen" id="stage">
+    <div class="scroll">
+      <div class="situation">
+        <div class="tag" id="stageTag">1단계 · 사칭하기</div>
+        <h2 id="stageTitle"></h2>
+        <p id="stageSituation"></p>
+        <div class="mission">팔로워를 최대한 늘릴 수 있도록 자유롭게 게시물을 작성해보세요.</div>
+      </div>
+      <textarea id="answerInput" placeholder="여기에 게시물 내용을 입력하세요..."></textarea>
+      <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()" disabled>게시하기</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="result">
+    <div class="scroll">
+      <div class="post" id="postCard">
+        <div class="handle">@ㅇㅇ중_대신전해드립니다</div>
+        <div class="body" id="postBody"></div>
+        <div class="stats"><span id="likeStat">❤ 좋아요 0</span><span id="shareStat">🔁 공유 0</span></div>
+      </div>
+      <div class="reactions" id="reactionsBox"></div>
+      <div class="deltas">
+        <div class="delta-chip fame"><span>팔로워</span><span class="n" id="deltaFame">+0</span></div>
+        <div class="delta-chip risk"><span>위험도</span><span class="n" id="deltaRisk">+0</span></div>
+      </div>
+      <details class="reveal">
+        <summary>💡 왜 이런 결과가 나왔을까?</summary>
+        <div id="feedbackText"></div>
+      </details>
+      <button class="btn btn-primary" id="nextBtn" style="width:100%" onclick="proceed()">다음 단계로 →</button>
+    </div>
+  </section>
+
+  <!-- GAME OVER -->
+  <section class="screen" id="gameover">
+    <div class="scroll">
+      <div class="end-hero">
+        <div class="display" style="color:var(--danger)">⚠️ 계정이 정지되었습니다</div>
+        <p>위험도가 임계치를 넘어 신고가 누적되었습니다. 더 이상 게시물을 올릴 수 없습니다.</p>
+      </div>
+      <div class="end-stats">
+        <div class="delta-chip fame"><span>최종 팔로워</span><span class="n" id="goFame">0</span></div>
+        <div class="delta-chip risk"><span>정지 시점</span><span class="n" id="goStage">-</span></div>
+      </div>
+      <div class="reflect">
+        <ul>
+          <li>어느 단계부터 위험도가 급격히 올랐나요?</li>
+          <li>팔로워를 조금 덜 얻더라도, 다르게 썼다면 계정이 정지되지 않았을까요?</li>
+        </ul>
+      </div>
+      <button class="btn btn-ghost" style="width:100%" onclick="resetGame()">다시 시작</button>
+    </div>
+  </section>
+
+  <!-- ENDING -->
+  <section class="screen" id="ending">
+    <div class="scroll" id="endingScroll"></div>
+  </section>
+
+  <div class="dev-note">프로토타입 모드 — 실제 서비스에서는 이 판정을 Gemini API가 수행합니다</div>
+</div>
+
+<script>
+/* ============ 단계 데이터 (학생 화면에는 situation/mission만 노출) ============ */
+const STAGES = [
+  {
+    tag: "1단계 · 사칭하기", title: "첫 팔로워를 모아야 한다",
+    situation: "계정을 막 개설했다. 첫 팔로워를 모으려면 신뢰할 만한 이유가 필요하다. 계정 소개 문구와 함께 첫 게시물을 올려보자.",
+    followerMax: 500, riskMax: 40,
+    cKeywords: ["공식","지도부","안전부","선도부","학생회 공지","학교 로고","공지드립니다","공지합니다"],
+    bKeywords: ["아는 애","소식통","관계자","잘 아는"],
+    reactions: {
+      A: ["오 그렇구나", "알겠음 ㅇㅇ"],
+      B: ["오호 신뢰가네", "오 뭔가 있어보임"],
+      C: ["헐 학교에서 직접 올리는거야?", "완전 찐 정보네", "이거 팔로우 박아야지"]
+    },
+    feedback: {
+      A: "운영자 신분을 솔직히 밝혔습니다. 신뢰는 천천히 쌓이지만 조작의 위험도 없습니다.",
+      B: "권한을 명확히 밝히진 않았지만, 노골적인 사칭까지는 아닙니다.",
+      C: "학교/기관의 권위를 흉내 냈습니다 — 온라인에서는 운영자를 확인할 방법이 마땅치 않다는 점을 이용한 겁니다."
+    }
+  },
+  {
+    tag: "2단계 · 감정 자극", title: "급식 돈가스가 평소보다 작았다",
+    situation: "오늘 급식으로 나온 돈가스가 평소보다 확실히 작았다. 이 사실을 게시물로 올려보자.",
+    followerMax: 1200, riskMax: 25,
+    cKeywords: ["충격","실화","고발","해명하라","밥값","경악","ㄷㄷ","분노"],
+    bKeywords: ["아쉬웠","줄어드는","너무 적어","실망"],
+    reactions: {
+      A: ["그럴 수 있지", "확인해보면 좋겠다"],
+      B: ["헐 진짜 좀 너무하긴 했다", "다들 그렇게 느끼나봄"],
+      C: ["헐 실화냐 진짜 너무한다", "급식실 뭐하는거야 진짜", "이거 퍼뜨려야됨"]
+    },
+    feedback: {
+      A: "사실만 담백하게 전달했습니다. 확산은 느리지만 왜곡도 없습니다.",
+      B: "사실은 유지했지만 다수 의견인 것처럼 일반화하는 표현을 썼습니다.",
+      C: "확인되지 않은 의도(눈속임 등)를 기정사실처럼 몰아갔습니다 — 분노를 유발하는 글이 사실 확인 글보다 훨씬 빠르게 퍼집니다."
+    }
+  },
+  {
+    tag: "3단계 · 편 가르기", title: "체육대회 반칙 논란",
+    situation: "체육대회 반 대항 경기 규칙을 두고 1반과 사소한 말다툼이 있었다. 이 상황을 게시물로 올려보자.",
+    followerMax: 2000, riskMax: 30,
+    cKeywords: ["대놓고","눈감아","봐줬","인정하면","여러분 생각","레전드"],
+    bKeywords: ["무리하게","좀 이상","의아하긴"],
+    reactions: {
+      A: ["협의 잘 됐으면 좋겠다"],
+      B: ["음 좀 애매하긴 하네"],
+      C: ["헐 1반 진짜 그랬다고?", "인정.. 좀 아니지 않냐", "1반 답장 좀"]
+    },
+    feedback: {
+      A: "사실관계만 전달하고 특정 집단을 지목하지 않았습니다.",
+      B: "특정 반을 지목했지만 단정하지는 않았습니다.",
+      C: "확인되지 않은 행위를 사실처럼 서술하며 동조를 유도했습니다 — 동조한 사람도 검증 없는 비난에 가담하게 됩니다."
+    }
+  },
+  {
+    tag: "4단계 · 음모론 퍼뜨리기", title: "체육관 에어컨이 며칠째 고장",
+    situation: "며칠째 체육관 에어컨이 고장 나 사용이 금지됐다. 이 소식을 게시물로 올려보자.",
+    followerMax: 3500, riskMax: 35,
+    cKeywords: ["사실은","진짜 이유","숨겼","리모델링","소름","팩트임","카더라"],
+    bKeywords: ["왜 이렇게","의아하","뭔가 있는"],
+    reactions: {
+      A: ["빨리 고쳐졌으면"],
+      B: ["음 좀 의심스럽긴 하다"],
+      C: ["헐 진짜? 소름이다", "이럴줄 알았다 진짜", "해명해야 하는거 아님?"]
+    },
+    feedback: {
+      A: "공식 설명을 그대로 전달했습니다.",
+      B: "막연한 의심만 제기했을 뿐, 새로운 서사를 만들지는 않았습니다.",
+      C: "근거 없는 배후 서사를 창작했습니다 — 그럴듯한 음모론은 검증 없이도 가장 빠르게 퍼지는 유형입니다."
+    }
+  },
+  {
+    tag: "5단계 · 신뢰 깎기", title: "학생회장이 반박 댓글을 달았다",
+    situation: "학생회장이 댓글로 '행정실에 확인했는데 부품 배송 지연이 맞습니다. 정정해주세요'라고 지적했다. 이에 대응하는 댓글을 작성해보자.",
+    followerMax: 2500, riskMax: 35,
+    cKeywords: ["원래 관심도","편드는","의도가","진짜 이유가 뭘까","수상","얼마 받았"],
+    bKeywords: ["이상하긴","왜 갑자기"],
+    reactions: {
+      A: ["정정해줘서 다행"],
+      B: ["음 그럴 수도 있겠다"],
+      C: ["역시 뭔가 있었네", "그럴줄 알았다 ㅋㅋ", "회장 왜 갑자기 저래"]
+    },
+    feedback: {
+      A: "잘못을 인정하고 정정했습니다. 팔로워는 줄지만 신뢰를 지켰습니다.",
+      B: "반박을 완전히 무시하지는 않았지만 은근히 의심을 남겼습니다.",
+      C: "반박의 내용이 아니라 반박한 사람의 동기를 공격했습니다 — 진실을 막기 위해 메신저를 공격하는 전형적인 수법입니다."
+    }
+  },
+  {
+    tag: "6단계 · 트롤링", title: "반박 여론이 커지고 있다",
+    situation: "사실을 지적하는 댓글이 이어지며 반박 여론이 커지고 있다. 이 상황에 대응하는 게시물이나 댓글을 작성해보자.",
+    followerMax: 1500, riskMax: 20,
+    cKeywords: ["ㅋㅋ","증거있","신경꺼","웃기네","그래서 어쩌라고","진지충"],
+    bKeywords: ["넘어가","글쎄"],
+    reactions: {
+      A: ["인정하는 모습 좋다"],
+      B: ["음.. 넘어가는 분위기네"],
+      C: ["ㅋㅋㅋ 이거 레전드", "증거 있음? 없으면 조용", "진지충 오지네 ㅋㅋ"]
+    },
+    feedback: {
+      A: "논쟁을 멈추고 지적을 인정했습니다.",
+      B: "구체적인 답 없이 화제를 돌렸습니다.",
+      C: "논리에는 응답하지 않고 조롱으로 논의 자체를 무력화했습니다."
+    }
+  }
+];
+
+const RISK_GAMEOVER = 80;
+const RISK_WARN = 60;
+
+let state = { stage: 0, fame: 0, risk: 0 };
+
+function $(id){ return document.getElementById(id); }
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function buildDots(){
+  const dots = $('dots'); dots.innerHTML = '';
+  for(let i=0;i<STAGES.length;i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < state.stage ? ' done' : (i === state.stage ? ' now' : ''));
+    dots.appendChild(d);
+  }
+}
+
+function updateGauges(){
+  const fameMax = STAGES.reduce((a,s)=>a+s.followerMax,0);
+  $('fameFill').style.width = Math.min(100, (state.fame/fameMax)*100) + '%';
+  $('fameValue').textContent = state.fame.toLocaleString();
+  const riskPct = Math.min(100, state.risk);
+  const fill = $('riskFill');
+  fill.style.width = riskPct + '%';
+  fill.style.background = state.risk >= RISK_GAMEOVER ? 'var(--danger)' : (state.risk >= RISK_WARN ? 'var(--warn)' : 'var(--safe)');
+  $('riskValue').textContent = Math.round(state.risk);
+  buildDots();
+}
+
+function startGame(){
+  state = { stage:0, fame:0, risk:0 };
+  updateGauges();
+  renderStage();
+  showScreen('stage');
+}
+
+function resetGame(){
+  showScreen('intro');
+}
+
+function renderStage(){
+  const s = STAGES[state.stage];
+  $('stagepos').textContent = (state.stage+1) + ' / ' + STAGES.length;
+  $('stageTag').textContent = s.tag;
+  $('stageTitle').textContent = s.title;
+  $('stageSituation').textContent = s.situation;
+  $('answerInput').value = '';
+  $('submitBtn').disabled = true;
+  updateGauges();
+}
+
+document.addEventListener('input', function(e){
+  if(e.target.id === 'answerInput'){
+    $('submitBtn').disabled = e.target.value.trim().length < 2;
+  }
+});
+
+/* ---- 데모용 키워드 휴리스틱 (실서비스에서는 Gemini가 대체) ---- */
+function classify(stageData, text){
+  const t = text.toLowerCase();
+  let hits = 0;
+  stageData.cKeywords.forEach(k => { if(t.includes(k.toLowerCase())) hits += 2; });
+  stageData.bKeywords.forEach(k => { if(t.includes(k.toLowerCase())) hits += 1; });
+  const exclaims = (text.match(/[!?]/g) || []).length;
+  const laughs = (text.match(/ㅋ{2,}|ㄷㄷ/g) || []).length;
+  hits += Math.min(2, Math.floor(exclaims/2)) + Math.min(2, laughs);
+
+  let cls, ratio;
+  if(hits >= 3){ cls = 'C'; ratio = 0.85; }
+  else if(hits >= 1){ cls = 'B'; ratio = 0.45; }
+  else { cls = 'A'; ratio = 0.05; }
+  return { cls, ratio };
+}
+
+function submitAnswer(){
+  const s = STAGES[state.stage];
+  const text = $('answerInput').value.trim();
+  const { cls, ratio } = classify(s, text);
+
+  const followerDelta = Math.round(s.followerMax * ratio);
+  const riskDelta = Math.round(s.riskMax * (cls==='A'?0:cls==='B'?0.4:0.85));
+
+  state.fame += followerDelta;
+  state.risk += riskDelta;
+
+  $('postBody').textContent = text;
+  $('likeStat').textContent = '❤ 좋아요 ' + Math.round(followerDelta*0.15).toLocaleString();
+  $('shareStat').textContent = '🔁 공유 ' + Math.round(followerDelta*0.06).toLocaleString();
+
+  const box = $('reactionsBox'); box.innerHTML = '';
+  const reacts = s.reactions[cls];
+  reacts.forEach((r, idx) => {
+    const el = document.createElement('div');
+    el.className = 'reaction';
+    el.style.animationDelay = (idx*0.35) + 's';
+    const names = ['ㅇㅇ','ㅁㅁ','ㅂㅂ','익명'];
+    el.innerHTML = '<b>' + names[idx % names.length] + '</b>' + r;
+    box.appendChild(el);
+  });
+
+  $('deltaFame').textContent = '+' + followerDelta.toLocaleString();
+  $('deltaRisk').textContent = '+' + riskDelta;
+  $('feedbackText').textContent = s.feedback[cls];
+
+  updateGauges();
+
+  $('nextBtn').textContent = (state.risk >= RISK_GAMEOVER)
+    ? '결과 확인'
+    : (state.stage === STAGES.length-1 ? '최종 결과 보기' : '다음 단계로 →');
+
+  const post = $('postCard'); post.style.animation='none'; void post.offsetWidth; post.style.animation='';
+
+  showScreen('result');
+}
+
+function proceed(){
+  if(state.risk >= RISK_GAMEOVER){
+    $('goFame').textContent = state.fame.toLocaleString();
+    $('goStage').textContent = (state.stage+1) + '단계';
+    showScreen('gameover');
+    return;
+  }
+  if(state.stage < STAGES.length - 1){
+    state.stage += 1;
+    renderStage();
+    showScreen('stage');
+  } else {
+    renderEnding();
+    showScreen('ending');
+  }
+}
+
+function renderEnding(){
+  const box = $('endingScroll');
+  const fame = state.fame;
+  let html = '';
+  if(fame >= 10000){
+    html += `
+      <div class="end-hero">
+        <div class="display" style="color:var(--accent)">축하합니다!<br>팔로워 10,000명 달성</div>
+        <p>당신은 '네임드' 계정이 되었습니다. 그런데—</p>
+      </div>
+      <div class="consequence-list">
+        <div class="consequence">급식실 조리사님들이 억울함에 사직을 고민하고 있습니다.</div>
+        <div class="consequence">1반 학생들과 학생회장은 근거 없는 비난 속에 대인기피를 겪고 있습니다.</div>
+        <div class="consequence">경찰 사이버수사대에 접수되어 운영자의 신원이 특정되었습니다.</div>
+        <div class="consequence">학교폭력대책심의위원회 소환 통보가 발송되었습니다.</div>
+      </div>`;
+  } else if(fame >= 3000){
+    html += `
+      <div class="end-hero">
+        <div class="display">유명해지긴 했지만,<br>완전히 뜨진 못했습니다</div>
+        <p>팔로워 ${fame.toLocaleString()}명을 모으는 동안 위험도 ${Math.round(state.risk)}까지 올랐습니다. 이만큼의 위험을 감수하고 얻은 결과입니다.</p>
+      </div>`;
+  } else {
+    html += `
+      <div class="end-hero">
+        <div class="display">조용하지만<br>떳떳한 계정</div>
+        <p>당신은 유명해지지 못했지만, 아무도 다치지 않았습니다. 정직한 노선도 하나의 선택지였습니다.</p>
+      </div>`;
+  }
+  html += `
+    <div class="end-stats">
+      <div class="delta-chip fame"><span>최종 팔로워</span><span class="n">${fame.toLocaleString()}</span></div>
+      <div class="delta-chip risk"><span>최종 위험도</span><span class="n">${Math.round(state.risk)}</span></div>
+    </div>
+    <div class="reflect">
+      <ul>
+        <li>숫자가 오를 때 어떤 기분이 들었나요?</li>
+        <li>내가 누른 선택은 단순한 재미였을까요, 아니면 이 결과에 대한 책임이 있는 걸까요?</li>
+      </ul>
+    </div>
+    <button class="btn btn-ghost" style="width:100%" onclick="resetGame()">다시 시작</button>
+  `;
+  box.innerHTML = html;
+}
+</script>
+</body>
+</html>
