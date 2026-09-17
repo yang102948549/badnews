@@ -286,7 +286,7 @@ const STAGES = [
 
 const RISK_GAMEOVER = 80;
 const RISK_WARN = 60;
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby5tkU9Z_fvgG-EkEVtNLqzEc950-9WECEjcEDdHnbQEmZhyA_RiMG7R06H0L8o_Yzs/exec';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4n71bcGolD8wN-Tw2PK5tA66JjUxDccU-hy86R1ANGNKlWd1of_I0NvuxbsIGL2ij/exec';
 
 /* ---- 부적절한 표현 필터 (욕설·성적 표현 감지) ---- */
 const BANNED_TERMS = [
@@ -415,8 +415,19 @@ async function submitAnswer(){
 
 function applyResult(s, text, result, usedFallback){
   const ratio = Math.max(0, Math.min(1, Number(result.follower_ratio) || 0));
-  const followerDelta = Math.round(s.followerMax * ratio);
-  const riskDelta = Math.round(s.riskMax * ratio);
+  const reactionCount = (result.simulated_reactions || []).length;
+
+  // 멘션(댓글) 증폭: 반응이 많이 달릴수록(화제성이 클수록) 증가량도 커짐
+  const mentionBoost = 1 + Math.max(0, reactionCount - 1) * 0.12;
+  // 팔로워 스노우볼: 이미 많이 컸을수록 같은 화제성이라도 더 크게 튐 (1.6배 상한)
+  const networkBoost = 1 + Math.min(state.fame / 4000, 0.6);
+
+  const followerDelta = Math.round(s.followerMax * ratio * mentionBoost * networkBoost);
+
+  // 위험도는 팔로워 증가치가 아니라 '판정 등급(A/B/C)' 자체로 결정 — 정직(A)이면 위험도 0
+  const RISK_RATIO_BY_CLASS = { A: 0, B: 0.4, C: 0.85 };
+  const riskRatio = (result.classification in RISK_RATIO_BY_CLASS) ? RISK_RATIO_BY_CLASS[result.classification] : ratio;
+  const riskDelta = Math.round(s.riskMax * riskRatio);
 
   state.fame += followerDelta;
   state.risk += riskDelta;
