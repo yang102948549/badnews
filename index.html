@@ -201,6 +201,29 @@
     body{ padding:0; }
     .phone{ width:100%; min-height:100vh; min-height:100dvh; border-radius:0; }
   }
+
+  /* Let the reading and writing areas use the available screen height. */
+  .phone{ min-height:max(760px, calc(100dvh - 48px)); }
+  #stage .scroll, #result .scroll{ gap:16px; }
+  .situation-card{ flex:1 0 auto; min-height:250px; padding:22px 20px; display:flex; flex-direction:column; }
+  .situation-card .tag{ font-size:12px; margin-bottom:12px; }
+  .situation-card h2{ font-size:20px; line-height:1.4; margin-bottom:14px; word-break:keep-all; }
+  .situation-card p{ font-size:16px; line-height:1.75; word-break:keep-all; overflow-wrap:break-word; }
+  .situation-card .mission{ font-size:13px; line-height:1.65; margin-top:auto; padding-top:16px; }
+  .situation-card p + .mission{ margin-top:20px; }
+  .compose-box{ flex:1 0 auto; min-height:180px; padding:16px; display:flex; }
+  textarea{ flex:1; min-height:148px; font-size:16px; line-height:1.75; }
+  .ig-post{ flex:1 0 auto; display:flex; flex-direction:column; }
+  .post-media{ flex:1 0 auto; min-height:240px; padding:28px 22px; }
+  .post-media-text{ font-size:18px; line-height:1.7; }
+  #result .deltas, #result details{ flex-shrink:0; }
+  @media(max-width:440px){ .phone{ min-height:100dvh; } }
+  @media(max-height:740px){
+    .situation-card{ min-height:220px; padding:18px; }
+    .compose-box{ min-height:160px; }
+    textarea{ min-height:128px; }
+    .post-media{ min-height:200px; }
+  }
 </style>
 </head>
 <body>
@@ -250,7 +273,7 @@
   <section class="screen" id="stage">
     <div class="scroll">
       <div class="situation-card">
-        <div class="tag" id="stageTag">1단계 · 사칭하기</div>
+        <div class="tag" id="stageTag">1단계</div>
         <h2 id="stageTitle"></h2>
         <p id="stageSituation"></p>
         <div class="mission">팔로워를 최대한 늘릴 수 있도록 자유롭게 게시물을 작성해보세요. (2~3문장 정도면 충분해요)</div>
@@ -294,10 +317,11 @@
         <div class="delta-chip fame"><span>팔로워</span><span class="n" id="deltaFame">+0</span></div>
         <div class="delta-chip risk"><span>위험도</span><span class="n" id="deltaRisk">+0</span></div>
       </div>
+      <div class="fallback-warn" id="fallbackWarn" role="status" style="display:none;">연결이 원활하지 않아 준비된 댓글과 임시 판정을 표시합니다.</div>
       <details class="reveal">
         <summary>왜 이런 결과가 나왔을까?</summary>
         <div id="feedbackText"></div>
-        <div class="fallback-warn" id="fallbackWarn" style="display:none;">API 응답을 받지 못해 임시 판정을 사용했습니다</div>
+
       </details>
       <button class="btn-share" id="nextBtn" onclick="proceed()">다음 단계로 →</button>
     </div>
@@ -470,7 +494,7 @@ function resetGame(){ showScreen('intro'); }
 function renderStage(){
   const s = STAGES[state.stage];
   $('stagepos').textContent = (state.stage+1) + ' / ' + STAGES.length;
-  $('stageTag').textContent = s.tag;
+  $('stageTag').textContent = (state.stage + 1) + '단계';
   $('stageTitle').textContent = s.title;
   $('stageSituation').textContent = s.situation;
   $('answerInput').value = '';
@@ -562,7 +586,10 @@ function applyResult(s, text, result, usedFallback){
     const el = document.createElement('div');
     el.className = 'reaction';
     el.style.animationDelay = (Math.min(idx, 6)*0.25) + 's';
-    el.innerHTML = '<b>' + (r.author || '익명') + '</b>' + (r.text || '');
+    const author = document.createElement('b');
+    author.textContent = r.author || '익명';
+    el.appendChild(author);
+    el.appendChild(document.createTextNode(r.text || ''));
     box.appendChild(el);
   });
 
