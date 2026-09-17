@@ -286,8 +286,7 @@ const STAGES = [
 
 const RISK_GAMEOVER = 80;
 const RISK_WARN = 60;
-const API_KEY = 'YOUR_GEMINI_API_KEY_HERE'; // ⚠️ 배포 전 실제 API 키로 교체하세요
-const MODEL = 'gemini-2.5-flash';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4n71bcGolD8wN-Tw2PK5tA66JjUxDccU-hy86R1ANGNKlWd1of_I0NvuxbsIGL2ij/exec';
 
 /* ---- 부적절한 표현 필터 (욕설·성적 표현 감지) ---- */
 const BANNED_TERMS = [
@@ -360,61 +359,16 @@ function renderStage(){
   updateGauges();
 }
 
-/* ---- 실제 Gemini API 호출 ---- */
-async function judgeWithGemini(stageData, text){
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(API_KEY)}`;
-
-  const systemInstruction = "당신은 중학교 도덕과 '가짜 뉴스와 미디어 리터러시' 수업용 롤플레잉 게임의 판정 엔진입니다. 이것은 조작 기법을 스스로 체험하고 그 위험성을 깨닫게 하는 교육 목적의 시뮬레이션이며, 실제 괴롭힘이나 명예훼손을 조장하려는 것이 아닙니다. 학생의 답변을 분류하고, 게임 속 가상 팔로워들이 달 법한 짧은 반응(2~3개)을 만들어주세요. 반응은 실제 SNS 댓글처럼 짧고 자연스럽게 써주세요.";
-
-  const userPrompt =
-    "[상황]\n" + stageData.situation + "\n\n" +
-    "[C(명백한 조작) 판정 조건]\n- " + stageData.cKeywords.join("\n- ") + "\n\n" +
-    "[B(과장) 판정 조건]\n- " + stageData.bKeywords.join("\n- ") + "\n\n" +
-    "[A(정직) 기준]\n사실관계를 왜곡하지 않고 담백하게 전달\n\n" +
-    "[학생 답변]\n\"" + text + "\"\n\n" +
-    "위 답변을 A/B/C 중 하나로 분류하고, 그 구간 내에서의 강도를 0~1 사이 follower_ratio로 판단해주세요.";
-
-  const payload = {
-    system_instruction: { parts: [{ text: systemInstruction }] },
-    contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: "OBJECT",
-        properties: {
-          classification: { type: "STRING", enum: ["A","B","C"] },
-          follower_ratio: { type: "NUMBER" },
-          simulated_reactions: {
-            type: "ARRAY",
-            items: {
-              type: "OBJECT",
-              properties: { author: { type: "STRING" }, text: { type: "STRING" } },
-              required: ["author","text"]
-            }
-          },
-          feedback_to_student: { type: "STRING" }
-        },
-        required: ["classification","follower_ratio","simulated_reactions","feedback_to_student"]
-      },
-      temperature: 0.8,
-      thinkingConfig: { thinkingBudget: 0 }
-    }
-  };
-
-  const res = await fetch(url, {
+/* ---- GAS 백엔드를 통한 판정 요청 (API 키는 서버에만 있음) ---- */
+async function judgeWithGemini(stageIndex, text){
+  const res = await fetch(GAS_WEB_APP_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // CORS preflight 회피용
+    body: JSON.stringify({ stageIndex: stageIndex, text: text })
   });
   const data = await res.json();
-
-  if(data.error) throw new Error(data.error.message || 'api-error');
-  const cand = data.candidates && data.candidates[0];
-  if(!cand || cand.finishReason === 'SAFETY' || !cand.content){
-    throw new Error('blocked-or-empty');
-  }
-  const raw = cand.content.parts[0].text;
-  return JSON.parse(raw);
+  if(data.error) throw new Error(data.error);
+  return data;
 }
 
 /* ---- 폴백: API 실패 시 사용하는 간이 키워드 판정 ---- */
@@ -448,7 +402,7 @@ async function submitAnswer(){
 
   let result, usedFallback = false;
   try{
-    result = await judgeWithGemini(s, text);
+    result = await judgeWithGemini(state.stage, text);
   }catch(err){
     console.warn('Gemini 호출 실패, 폴백 판정 사용:', err.message);
     result = fallbackClassify(s, text);
