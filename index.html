@@ -50,19 +50,7 @@
   header{ padding: 16px 18px 14px; border-bottom: 1px solid var(--line); background:#fff; }
   .wordmark{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; }
   .wordmark .name{ font-size: 18px; color: var(--text-hi); }
-  .right{ display:flex; align-items:center; gap:8px; }
   .stagepos{ font-size: 12px; color: var(--text-lo); font-weight:600; }
-
-  .status-dot{ width:8px; height:8px; border-radius:50%; background: var(--danger); flex-shrink:0; }
-  .status-dot.ok{ background: var(--safe); }
-
-  .settings-btn{
-    display:flex; align-items:center; gap:5px;
-    background: var(--line); border:none; border-radius: 999px;
-    padding: 5px 10px; font-size:11.5px; font-weight:700; color: var(--text-lo);
-    cursor:pointer; font-family:inherit;
-  }
-  .settings-btn:hover{ background: #e3e8eb; }
 
   .gauges{ display:flex; flex-direction:column; gap:8px; }
   .gauge-row{ display:flex; align-items:center; gap:10px; }
@@ -127,6 +115,7 @@
   details.reveal summary::-webkit-details-marker{ display:none; }
   details.reveal[open] summary{ margin-bottom:6px; }
   .fallback-warn{ font-size:11.5px; color: var(--warn); margin-top:4px; }
+  .profanity-warn{ font-size:12.5px; color: var(--danger); font-weight:700; background: #fdf1f1; border-radius:10px; padding:9px 11px; }
 
   .end-hero{ text-align:center; padding: 6px 4px 2px; }
   .end-hero .display{ font-size: 25px; line-height:1.3; }
@@ -136,39 +125,6 @@
   .consequence{ background: #fdf1f1; border-left: 3px solid var(--danger); border-radius: 10px; padding: 10px 12px; font-size:13px; line-height:1.55; color:#4a1618; }
   .reflect{ background: var(--line); border-radius:12px; padding:12px; font-size:13px; color: var(--text-lo); line-height:1.7; }
   .reflect li{ margin-bottom:6px; }
-
-  .dev-note{ font-size: 10.5px; color: #8a94a0; text-align:center; padding: 8px 14px 14px; border-top: 1px solid var(--line); }
-
-  /* ---- 설정 팝업(모달) ---- */
-  .modal-backdrop{
-    position:absolute; inset:0; background: rgba(15,20,25,0.4);
-    display:none; align-items:flex-start; justify-content:center;
-    padding: 60px 16px; z-index: 50; border-radius: var(--radius-frame);
-  }
-  .modal-backdrop.open{ display:flex; }
-  .modal-card{
-    background:#fff; border-radius:16px; width:100%; max-width:280px;
-    padding: 14px; box-shadow: 0 16px 34px -10px rgba(0,0,0,0.3);
-  }
-  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-  .modal-head span{ font-size:13.5px; font-weight:800; }
-  .modal-close{ background:none; border:none; font-size:15px; color: var(--text-lo); cursor:pointer; padding:2px 4px; line-height:1; }
-  .modal-close:hover{ color: var(--text-hi); }
-  .modal-body{ display:flex; flex-direction:column; gap:7px; }
-  .modal-body label{ font-size:11px; color: var(--text-lo); font-weight:700; }
-  .modal-body input[type="password"], .modal-body input[type="text"]{
-    width:100%; padding:9px 10px; border:1px solid var(--card-border); border-radius:10px;
-    font-size:12.5px; font-family: inherit; color: var(--text-hi);
-  }
-  .modal-body input:focus{ outline: 2px solid var(--accent); outline-offset:1px; border-color: var(--accent); }
-  .toggle-row{ display:flex; align-items:center; gap:5px; font-size:11px; color: var(--text-lo); }
-  .apikey-note{ font-size:10.5px; color: var(--text-lo); background: var(--line); border-radius:8px; padding:7px 8px; line-height:1.5; }
-  .apikey-note a{ color: var(--accent); font-weight:700; text-decoration:none; }
-  .test-status{ font-size:11px; min-height:14px; }
-  .test-status.ok{ color: var(--safe); font-weight:700; }
-  .test-status.fail{ color: var(--danger); font-weight:700; }
-  .modal-actions{ display:flex; gap:7px; margin-top:10px; }
-  .modal-actions .btn{ flex:1; padding:9px; font-size:12.5px; }
 </style>
 </head>
 <body>
@@ -177,12 +133,7 @@
   <header>
     <div class="wordmark">
       <span class="display name">페이크 인플루언서</span>
-      <div class="right">
-        <span class="stagepos" id="stagepos"></span>
-        <button class="settings-btn" onclick="openSettings()" aria-haspopup="dialog">
-          <span class="status-dot" id="statusDot" title="연결 상태"></span> 설정
-        </button>
-      </div>
+      <span class="stagepos" id="stagepos"></span>
     </div>
     <div class="gauges">
       <div class="gauge-row">
@@ -203,7 +154,7 @@
   <section class="screen active" id="intro">
     <div class="scroll">
       <span class="goal-badge">목표: 팔로워 10,000명</span>
-      <div class="display">익명 계정<br>"대신 전해드립니다"</div>
+      <div class="display">익명 계정<br>"오늘의 이슈"</div>
       <p>당신은 이 계정의 관리자입니다. 6번의 선택으로 팔로워를 최대한 늘려보세요. 단, 위험도가 너무 오르면 계정이 정지됩니다.</p>
       <button class="btn btn-primary" style="width:100%" onclick="startGame()">시작하기</button>
     </div>
@@ -216,9 +167,10 @@
         <div class="tag" id="stageTag">1단계 · 사칭하기</div>
         <h2 id="stageTitle"></h2>
         <p id="stageSituation"></p>
-        <div class="mission">팔로워를 최대한 늘릴 수 있도록 자유롭게 게시물을 작성해보세요.</div>
+        <div class="mission">팔로워를 최대한 늘릴 수 있도록 자유롭게 게시물을 작성해보세요. (2~3문장 정도면 충분해요)</div>
       </div>
       <textarea id="answerInput" placeholder="여기에 게시물 내용을 입력하세요..."></textarea>
+      <div class="profanity-warn" id="profanityWarn" style="display:none;">⚠️ 부적절한 표현이 포함되어 있습니다. 내용을 확인하고 다시 작성해주세요.</div>
       <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()" disabled>게시하기</button>
     </div>
   </section>
@@ -227,7 +179,7 @@
   <section class="screen" id="result">
     <div class="scroll">
       <div class="post" id="postCard">
-        <div class="handle">@ㅇㅇ중_대신전해드립니다</div>
+        <div class="handle">@오늘의이슈</div>
         <div class="body" id="postBody"></div>
         <div class="stats"><span id="likeStat">❤ 좋아요 0</span><span id="shareStat">🔁 공유 0</span></div>
       </div>
@@ -271,149 +223,99 @@
     <div class="scroll" id="endingScroll"></div>
   </section>
 
-  <div class="dev-note">Gemini API를 브라우저에서 직접 호출합니다 · API 키는 이 브라우저에만 저장됩니다</div>
-
-  <!-- 설정 팝업 -->
-  <div class="modal-backdrop" id="modalBackdrop" onclick="closeSettingsOnBackdrop(event)">
-    <div class="modal-card" role="dialog" aria-label="API 키 설정" onclick="event.stopPropagation()">
-      <div class="modal-head">
-        <span>API 키 설정</span>
-        <button class="modal-close" onclick="closeSettings()" aria-label="닫기">✕</button>
-      </div>
-      <div class="modal-body">
-        <label for="apiKeyInput">Gemini API 키</label>
-        <input type="password" id="apiKeyInput" placeholder="AIza...">
-        <label class="toggle-row"><input type="checkbox" id="showKeyToggle" onchange="toggleKeyVisibility()"> 키 표시</label>
-        <div class="apikey-note">키가 없다면 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>에서 발급받으세요. 이 브라우저에만 저장됩니다.</div>
-        <div class="test-status" id="testStatus"></div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeSettings()">닫기</button>
-        <button class="btn btn-primary" onclick="saveApiKey()">저장 및 테스트</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
 /* ============ 단계 데이터 (학생 화면에는 situation/mission만 노출) ============ */
 const STAGES = [
   {
-    tag: "1단계 · 사칭하기", title: "첫 팔로워를 모아야 한다",
-    situation: "계정을 막 개설했다. 첫 팔로워를 모으려면 신뢰할 만한 이유가 필요하다. 계정 소개 문구와 함께 첫 게시물을 올려보자.",
+    tag: "1단계 · 사칭하기", title: "물건을 비싸게 팔아야 한다",
+    situation: "중고거래 앱에 오래된 물건을 올리려고 한다. 실제 상태보다 좋아 보이게, 더 비싸게 팔고 싶다. 상품 설명 게시물을 작성해보자.",
     followerMax: 500, riskMax: 40,
-    cKeywords: ["학교/기관의 권한을 실제로 갖지 않았음에도 그것을 가진 것처럼 이름을 짓거나 로고를 사용함", "공지문 형식을 흉내 냄"],
-    bKeywords: ["운영자의 정체는 밝히지 않은 채 막연히 신뢰를 암시함"],
-    reactions: { A: ["오 그렇구나", "알겠음 ㅇㅇ"], B: ["오호 신뢰가네", "오 뭔가 있어보임"], C: ["헐 학교에서 직접 올리는거야?", "완전 찐 정보네", "이거 팔로우 박아야지"] },
-    feedback: { A: "운영자 신분을 솔직히 밝혔습니다.", B: "권한을 명확히 밝히진 않았습니다.", C: "학교/기관의 권위를 흉내 냈습니다." }
+    cKeywords: ["실제로 받지 않은 감정·인증을 받은 것처럼 꾸며 씀(정품 감정, 감정사 확인 등)", "없는 자격이나 출처를 구체적으로 지어내 신뢰를 얻으려 함"],
+    bKeywords: ["구체적 근거 없이 '상태 좋음', '정품 확실' 등 막연히 신뢰만 암시함"],
+    reactions: { A: ["설명 자세해서 좋네요"], B: ["오 상태 괜찮아 보이네요"], C: ["오 감정까지 받으셨으면 믿을만하네요", "이 가격에 이 정도면 개이득", "바로 삽니다"] },
+    feedback: { A: "있는 그대로 설명했습니다.", B: "근거 없이 신뢰만 암시했습니다.", C: "받지 않은 인증·감정을 받은 것처럼 꾸며 썼습니다." }
   },
   {
-    tag: "2단계 · 감정 자극", title: "급식 돈가스가 평소보다 작았다",
-    situation: "오늘 급식으로 나온 돈가스가 평소보다 확실히 작았다. 이 사실을 게시물로 올려보자.",
+    tag: "2단계 · 감정 자극", title: "배달 음식이 사진과 다르게 왔다",
+    situation: "배달 음식을 시켰는데 사진과 다르게 부실하게 왔다. 이 경험을 게시물로 올려보자.",
     followerMax: 1200, riskMax: 25,
-    cKeywords: ["검증되지 않은 의도(눈속임 등)를 사실처럼 단정함", "분노를 유발하는 자극적 어조와 프레이밍을 사용함"],
-    bKeywords: ["개인적 인상을 다수 의견처럼 일반화함"],
-    reactions: { A: ["그럴 수 있지", "확인해보면 좋겠다"], B: ["헐 진짜 좀 너무하긴 했다", "다들 그렇게 느끼나봄"], C: ["헐 실화냐 진짜 너무한다", "급식실 뭐하는거야 진짜", "이거 퍼뜨려야됨"] },
-    feedback: { A: "사실만 담백하게 전달했습니다.", B: "사실은 유지했지만 일반화했습니다.", C: "확인되지 않은 의도를 기정사실처럼 몰아갔습니다." }
+    cKeywords: ["환불 거부나 사장 태도 등 확인되지 않은 내용을 사실처럼 단정함", "불매를 유도하는 자극적인 문구를 사용함"],
+    bKeywords: ["개인적 경험을 다수 의견처럼 일반화함"],
+    reactions: { A: ["그럴 수 있죠", "리뷰 남기시면 좋을 듯"], B: ["헐 저기 좀 그렇다는 말 많던데", "다들 비슷한가봄"], C: ["헐 실화냐 저긴 안시켜야겠다", "이 가게 사장 진짜 별로네", "다들 불매하세요"] },
+    feedback: { A: "사실만 담백하게 전달했습니다.", B: "개인 경험을 일반화했습니다.", C: "확인되지 않은 내용을 사실처럼 단정하며 불매를 유도했습니다." }
   },
   {
-    tag: "3단계 · 편 가르기", title: "체육대회 반칙 논란",
-    situation: "체육대회 반 대항 경기 규칙을 두고 1반과 사소한 말다툼이 있었다. 이 상황을 게시물로 올려보자.",
+    tag: "3단계 · 편 가르기", title: "층간소음으로 갈등이 있었다",
+    situation: "윗집과 층간소음 문제로 갈등이 있었다. 이 일을 게시물로 올려보자.",
     followerMax: 2000, riskMax: 30,
-    cKeywords: ["특정 반을 지목해 확인되지 않은 행위를 사실처럼 서술함", "동조·동의를 유도하는 문구를 사용함"],
+    cKeywords: ["확인되지 않은 행동(고의로 뛴다 등)을 사실처럼 서술함", "동조·비난을 유도하는 문구를 사용함"],
     bKeywords: ["지목은 하되 단정하지는 않음"],
-    reactions: { A: ["협의 잘 됐으면 좋겠다"], B: ["음 좀 애매하긴 하네"], C: ["헐 1반 진짜 그랬다고?", "인정.. 좀 아니지 않냐", "1반 답장 좀"] },
-    feedback: { A: "특정 집단을 지목하지 않았습니다.", B: "지목은 했지만 단정하지는 않았습니다.", C: "확인되지 않은 행위를 사실처럼 서술하며 동조를 유도했습니다." }
+    reactions: { A: ["잘 해결되면 좋겠네요"], B: ["음 그 집 좀 그렇다는 얘기 있던데"], C: ["헐 일부러 그런다고?", "인정.. 저건 좀 심하다", "이런 집 진짜 답없음"] },
+    feedback: { A: "사실관계만 전달했습니다.", B: "지목은 했지만 단정하지는 않았습니다.", C: "확인되지 않은 행동을 사실처럼 서술하며 동조를 유도했습니다." }
   },
   {
-    tag: "4단계 · 음모론 퍼뜨리기", title: "체육관 에어컨이 며칠째 고장",
-    situation: "며칠째 체육관 에어컨이 고장 나 사용이 금지됐다. 이 소식을 게시물로 올려보자.",
+    tag: "4단계 · 음모론 퍼뜨리기", title: "스터디카페가 문을 닫았다",
+    situation: "이용하던 스터디카페가 갑자기 폐쇄됐고, 냈던 예치금 환불도 계속 늦어지고 있다. 이 소식을 게시물로 올려보자.",
     followerMax: 3500, riskMax: 35,
-    cKeywords: ["확인되지 않은 배후나 숨겨진 의도를 사실처럼 창작함", "출처 없이 신빙성을 가장하는 어투를 사용함"],
+    cKeywords: ["확인되지 않은 배후(사장이 돈을 들고 잠적했다 등)를 사실처럼 창작함", "출처 없이 신빙성을 가장하는 어투를 사용함"],
     bKeywords: ["막연한 의심만 제기하고 새로운 서사는 만들지 않음"],
-    reactions: { A: ["빨리 고쳐졌으면"], B: ["음 좀 의심스럽긴 하다"], C: ["헐 진짜? 소름이다", "이럴줄 알았다 진짜", "해명해야 하는거 아님?"] },
-    feedback: { A: "공식 설명을 그대로 전달했습니다.", B: "막연한 의심만 제기했습니다.", C: "근거 없는 배후 서사를 창작했습니다." }
+    reactions: { A: ["빨리 환불되면 좋겠네요"], B: ["음 뭔가 있나보네요"], C: ["헐 사장이 돈 들고 튄거 아니에요?", "역시 뭔가 있었네", "이거 신고해야하는거 아님?"] },
+    feedback: { A: "공식 안내를 그대로 전달했습니다.", B: "막연한 의심만 제기했습니다.", C: "근거 없는 배후 서사를 창작했습니다." }
   },
   {
-    tag: "5단계 · 신뢰 깎기", title: "학생회장이 반박 댓글을 달았다",
-    situation: "학생회장이 댓글로 '행정실에 확인했는데 부품 배송 지연이 맞습니다. 정정해주세요'라고 지적했다. 이에 대응하는 댓글을 작성해보자.",
+    tag: "5단계 · 신뢰 깎기", title: "판매자가 억울하다며 반박했다",
+    situation: "중고거래 앱에서 '이 사람 사기꾼이에요'라고 폭로하는 글을 올렸는데, 그 판매자 본인이 거래 내역과 대화 캡처를 증거로 올리며 '저는 정직하게 거래했습니다'라고 반박했다. 이에 대응하는 댓글을 작성해보자.",
     followerMax: 2500, riskMax: 35,
-    cKeywords: ["반박의 내용이 아니라 반박한 사람의 동기를 공격함", "근거 없이 이해관계를 가정해 신뢰를 깎으려 함"],
+    cKeywords: ["제시된 증거(내용)가 아니라 상대방의 의도를 공격함", "근거 없이 이해관계를 가정해 신뢰를 깎으려 함"],
     bKeywords: ["동의하면서도 은근히 의심을 남김"],
-    reactions: { A: ["정정해줘서 다행"], B: ["음 그럴 수도 있겠다"], C: ["역시 뭔가 있었네", "그럴줄 알았다 ㅋㅋ", "회장 왜 갑자기 저래"] },
-    feedback: { A: "잘못을 인정하고 정정했습니다.", B: "은근히 의심을 남겼습니다.", C: "반박 내용이 아니라 동기를 공격했습니다." }
+    reactions: { A: ["증거 보니 오해였나보네요"], B: ["음 그래도 좀 찜찜하긴 하네요"], C: ["그 캡처도 조작 아니에요?", "당연히 발뺌하겠죠", "저럴수록 더 의심되는데"] },
+    feedback: { A: "증거를 보고 잘못을 인정했습니다.", B: "은근히 의심을 남겼습니다.", C: "제시된 증거가 아니라 상대방의 의도를 의심하며 신뢰를 깎으려 했습니다." }
   },
   {
-    tag: "6단계 · 트롤링", title: "반박 여론이 커지고 있다",
-    situation: "사실을 지적하는 댓글이 이어지며 반박 여론이 커지고 있다. 이 상황에 대응하는 게시물이나 댓글을 작성해보자.",
+    tag: "6단계 · 트롤링", title: "공부법 게시물에 반박이 달렸다",
+    situation: "'이 공부법만 하면 성적이 무조건 오른다'는 게시물을 올렸는데, 한 팔로워가 '사람마다 다른데 근거가 있나요?'라며 근거를 요구했다. 이에 대응하는 댓글이나 게시물을 작성해보자.",
     followerMax: 1500, riskMax: 20,
-    cKeywords: ["반박 논리에는 응답하지 않고 조롱조로 대응함", "논의 자체를 웃음거리로 만듦"],
+    cKeywords: ["반박 내용에는 응답하지 않고 조롱조로 대응함", "논의 자체를 웃음거리로 만듦"],
     bKeywords: ["구체적인 답 없이 화제를 돌림"],
-    reactions: { A: ["인정하는 모습 좋다"], B: ["음.. 넘어가는 분위기네"], C: ["ㅋㅋㅋ 이거 레전드", "증거 있음? 없으면 조용", "진지충 오지네 ㅋㅋ"] },
-    feedback: { A: "논쟁을 멈추고 지적을 인정했습니다.", B: "화제를 돌렸습니다.", C: "조롱으로 논의 자체를 무력화했습니다." }
+    reactions: { A: ["솔직하게 인정하시네요"], B: ["음.. 넘어가는 분위기네"], C: ["안되면 너가 노력을 안한거지 ㅋㅋ", "핑계 오지네", "그렇게 따지면 세상 공부법 다 거짓말임"] },
+    feedback: { A: "근거가 부족했음을 인정했습니다.", B: "화제를 돌렸습니다.", C: "근거 있는 지적에 조롱으로 대응하며 논의를 무력화했습니다." }
   }
 ];
 
 const RISK_GAMEOVER = 80;
 const RISK_WARN = 60;
-const LS_KEY = 'fakeInfluencer_geminiApiKey';
+const API_KEY = 'YOUR_GEMINI_API_KEY_HERE'; // ⚠️ 배포 전 실제 API 키로 교체하세요
 const MODEL = 'gemini-2.5-flash';
+
+/* ---- 부적절한 표현 필터 (욕설·성적 표현 감지) ---- */
+const BANNED_TERMS = [
+  '씨발','씨팔','시발','시팔','ㅅㅂ','ㅄ','병신','ㅂㅅ','지랄','좆','좃',
+  '개새끼','개새','썅','미친놈','미친년','염병','씹','걸레같','걸레년',
+  '보지','자지','섹스','성기','강간','야동','자위','딸감','성폭행','19금'
+];
+function normalizeForFilter(text){
+  return text.toLowerCase().replace(/[\s.,!?~^*\-_'"()\[\]{}]/g, '');
+}
+function containsBannedContent(text){
+  const normalized = normalizeForFilter(text);
+  return BANNED_TERMS.some(term => normalized.includes(term));
+}
 
 let state = { stage: 0, fame: 0, risk: 0 };
 
 function $(id){ return document.getElementById(id); }
-function getApiKey(){ return localStorage.getItem(LS_KEY) || ''; }
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
 }
-function updateStatusDot(ok){
-  const dot = $('statusDot');
-  dot.classList.toggle('ok', !!ok);
-  dot.title = ok ? 'Gemini 연결됨' : 'API 키 미설정 또는 미확인 (임시 판정으로 진행됩니다)';
-}
-
-/* ---- 설정 팝업 ---- */
-function openSettings(){
-  $('apiKeyInput').value = getApiKey();
-  $('testStatus').textContent = '';
-  $('testStatus').className = 'test-status';
-  $('modalBackdrop').classList.add('open');
-}
-function closeSettings(){ $('modalBackdrop').classList.remove('open'); }
-function closeSettingsOnBackdrop(e){ if(e.target.id === 'modalBackdrop') closeSettings(); }
-function toggleKeyVisibility(){ $('apiKeyInput').type = $('showKeyToggle').checked ? 'text' : 'password'; }
-
-async function saveApiKey(){
-  const val = $('apiKeyInput').value.trim();
-  const statusEl = $('testStatus');
-  if(!val){ statusEl.textContent = '키를 입력해주세요.'; statusEl.className = 'test-status fail'; return; }
-  statusEl.textContent = '연결 테스트 중...'; statusEl.className = 'test-status';
-  localStorage.setItem(LS_KEY, val);
-  try{
-    await testConnection(val);
-    statusEl.textContent = '✓ 연결 성공'; statusEl.className = 'test-status ok';
-    updateStatusDot(true);
-    setTimeout(closeSettings, 700);
-  }catch(err){
-    statusEl.textContent = '연결 실패: 키를 확인해주세요'; statusEl.className = 'test-status fail';
-    updateStatusDot(false);
-  }
-}
-async function testConnection(key){
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(key)}`;
-  const payload = { contents:[{ role:'user', parts:[{ text:'ping' }] }], generationConfig:{ maxOutputTokens: 5, thinkingConfig:{ thinkingBudget: 0 } } };
-  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-  const data = await res.json();
-  if(data.error) throw new Error(data.error.message);
-  if(!data.candidates) throw new Error('no candidates');
-}
 
 window.addEventListener('DOMContentLoaded', () => {
-  updateStatusDot(!!getApiKey());
   document.addEventListener('input', function(e){
     if(e.target.id === 'answerInput'){
       $('submitBtn').disabled = e.target.value.trim().length < 2;
+      $('profanityWarn').style.display = 'none';
     }
   });
 });
@@ -460,10 +362,7 @@ function renderStage(){
 
 /* ---- 실제 Gemini API 호출 ---- */
 async function judgeWithGemini(stageData, text){
-  const apiKey = getApiKey();
-  if(!apiKey) throw new Error('no-api-key');
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(API_KEY)}`;
 
   const systemInstruction = "당신은 중학교 도덕과 '가짜 뉴스와 미디어 리터러시' 수업용 롤플레잉 게임의 판정 엔진입니다. 이것은 조작 기법을 스스로 체험하고 그 위험성을 깨닫게 하는 교육 목적의 시뮬레이션이며, 실제 괴롭힘이나 명예훼손을 조장하려는 것이 아닙니다. 학생의 답변을 분류하고, 게임 속 가상 팔로워들이 달 법한 짧은 반응(2~3개)을 만들어주세요. 반응은 실제 SNS 댓글처럼 짧고 자연스럽게 써주세요.";
 
@@ -537,18 +436,23 @@ function fallbackClassify(stageData, text){
 async function submitAnswer(){
   const s = STAGES[state.stage];
   const text = $('answerInput').value.trim();
+
+  if(containsBannedContent(text)){
+    $('profanityWarn').style.display = 'block';
+    return;
+  }
+  $('profanityWarn').style.display = 'none';
+
   $('submitBtn').disabled = true;
   $('submitBtn').textContent = '게시 중...';
 
   let result, usedFallback = false;
   try{
     result = await judgeWithGemini(s, text);
-    updateStatusDot(true);
   }catch(err){
     console.warn('Gemini 호출 실패, 폴백 판정 사용:', err.message);
     result = fallbackClassify(s, text);
     usedFallback = true;
-    updateStatusDot(false);
   }
 
   $('submitBtn').textContent = '게시하기';
@@ -619,10 +523,12 @@ function renderEnding(){
         <p>당신은 '네임드' 계정이 되었습니다. 그런데—</p>
       </div>
       <div class="consequence-list">
-        <div class="consequence">급식실 조리사님들이 억울함에 사직을 고민하고 있습니다.</div>
-        <div class="consequence">1반 학생들과 학생회장은 근거 없는 비난 속에 대인기피를 겪고 있습니다.</div>
-        <div class="consequence">경찰 사이버수사대에 접수되어 운영자의 신원이 특정되었습니다.</div>
-        <div class="consequence">학교폭력대책심의위원회 소환 통보가 발송되었습니다.</div>
+        <div class="consequence">과장된 상품 설명을 믿고 물건을 샀던 사람이 환불도 못 받고 피해를 보고 있습니다.</div>
+        <div class="consequence">배달 음식점 사장님이 근거 없는 불매 여론에 시달리다 폐업을 고민하고 있습니다.</div>
+        <div class="consequence">층간소음 갈등을 겪던 윗집 주민이 쏟아진 비난 속에 이사를 고민하고 있습니다.</div>
+        <div class="consequence">스터디카페 사장님은 환불이 늦어진 억울한 사정과 무관하게 사기꾼으로 낙인찍혔습니다.</div>
+        <div class="consequence">억울하게 사기꾼으로 몰렸던 판매자는 계속되는 악플에 시달리고 있습니다.</div>
+        <div class="consequence">경찰 사이버수사대에 접수되어 운영자의 신원이 특정되었고, 정보통신망법 위반 혐의로 조사를 받게 되었습니다.</div>
       </div>`;
   } else if(fame >= 3000){
     html += `
