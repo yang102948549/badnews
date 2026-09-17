@@ -3,26 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>페이크 인플루언서</title>
+<title>yangstagram</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <style>
   :root{
-    --bg-outer: #e5e8ea;
-    --frame: #ffffff;
+    --bg-outer: #efeff1;
+    --frame: #fafafa;
     --card: #ffffff;
-    --card-border: #cfd9de;
-    --post: #ffffff;
-    --line: #eff3f4;
-    --text-hi: #0f1419;
-    --text-lo: #536471;
-    --accent: #1d9bf0;
-    --accent-tint: rgba(29,155,240,0.10);
-    --safe: #00ba7c;
+    --border: #dbdbdb;
+    --text-hi: #262626;
+    --text-lo: #8e8e8e;
+    --accent: #0095f6;
+    --grad: #1675d1;
+    --a1: #1675d1;
+    --a2: #2563a6;
+    --safe: #2ecc71;
     --warn: #ffad1f;
-    --danger: #f4212e;
-    --radius-card: 16px;
-    --radius-frame: 26px;
-    --dur: 0.4s;
+    --danger: #ed4956;
+    --radius-card: 8px;
+    --radius-frame: 30px;
+    --dur: 0.35s;
   }
   @media (prefers-reduced-motion: reduce){ :root{ --dur: 0.001s; } }
   *{ box-sizing: border-box; }
@@ -32,168 +32,274 @@
     font-family: 'Pretendard', -apple-system, 'Malgun Gothic', sans-serif;
     color: var(--text-hi);
     display:flex; align-items:center; justify-content:center;
-    padding: 28px 12px;
+    padding: 24px 12px;
   }
-  .display{ font-family: 'Pretendard', sans-serif; font-weight: 900; letter-spacing: -0.01em; }
+  .display{ font-family:'Pretendard', sans-serif; font-weight:900; letter-spacing:-0.01em; }
 
   .phone{
-    width: 100%; max-width: 420px;
+    width: 400px; max-width: 100%; flex-shrink:0;
     background: var(--frame);
     border-radius: var(--radius-frame);
     box-shadow: 0 20px 45px -18px rgba(15,20,25,0.18), 0 0 0 1px rgba(15,20,25,0.06);
     overflow: hidden;
     display:flex; flex-direction:column;
-    min-height: 700px;
-    position: relative;
+    min-height: 720px;
   }
 
-  header{ padding: 16px 18px 14px; border-bottom: 1px solid var(--line); background:#fff; }
-  .wordmark{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; }
-  .wordmark .name{ font-size: 18px; color: var(--text-hi); }
-  .stagepos{ font-size: 12px; color: var(--text-lo); font-weight:600; }
+  /* ---- header ---- */
+  header{ background:#fff; border-bottom:1px solid var(--border); }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px 8px; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px 8px; gap:10px; }
+  .back-icon{ width:20px; height:20px; color:var(--text-hi); flex-shrink:0; }
+  .wordmark{ font-size:15px; font-weight:600; color:var(--text-hi); display:flex; align-items:center; gap:4px; flex:1; }
+  .verified{ width:14px; height:14px; flex-shrink:0; }
+  .topicons{ display:flex; gap:16px; color:var(--text-hi); flex-shrink:0; }
+  .topicons svg{ width:22px; height:22px; }
 
-  .gauges{ display:flex; flex-direction:column; gap:8px; }
-  .gauge-row{ display:flex; align-items:center; gap:10px; }
-  .gauge-label{ font-size: 11px; color: var(--text-lo); width: 46px; flex-shrink:0; font-weight:600; }
-  .gauge-track{ flex:1; height:8px; border-radius:6px; background: var(--line); overflow:hidden; }
-  .gauge-fill{ height:100%; border-radius:6px; transition: width var(--dur) ease, background var(--dur) ease; }
-  .gauge-fill.fame{ background: var(--accent); }
-  .gauge-value{ font-size:13px; font-weight:800; width:56px; text-align:right; font-variant-numeric: tabular-nums; }
-  .gauge-value.fame{ color: var(--accent); }
-
-  .dots{ display:flex; gap:6px; margin-top:12px; }
-  .dot{ width:7px; height:7px; border-radius:50%; background: var(--line); }
+  .progress-row{ display:flex; gap:3px; padding:0 14px 10px; }
+  .dot{ flex:1; height:3px; border-radius:3px; background: var(--border); }
   .dot.done{ background: var(--accent); }
-  .dot.now{ background: var(--text-hi); }
+  .dot.now{ background: var(--accent); }
 
+  .stats-row{ display:flex; gap:10px; padding:0 14px 12px; align-items:center; }
+  .avatar-ring{
+    width:48px; height:48px; border-radius:50%; flex-shrink:0;
+    background: var(--accent); padding:2px; transition: background var(--dur) ease;
+  }
+  .avatar-ring.warn{ background: var(--warn); }
+  .avatar-ring.danger{ background: var(--danger); }
+  .avatar-inner{
+    width:100%; height:100%; border-radius:50%; background:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:20px;
+  }
+  .stats-text{ flex:1; min-width:0; }
+  .handle-line{ font-size:13.5px; font-weight:700; display:flex; align-items:baseline; gap:6px; }
+  .stagepos{ font-size:11px; color:var(--text-lo); font-weight:600; }
+  .stat-numbers{ display:flex; gap:12px; font-size:11.5px; color:var(--text-lo); margin:3px 0 5px; }
+  .stat-numbers b{ color:var(--text-hi); font-weight:800; }
+  .gauge-track{ height:5px; border-radius:4px; background:var(--border); overflow:hidden; margin-bottom:3px; }
+  .gauge-fill{ height:100%; border-radius:4px; transition: width var(--dur) ease, background var(--dur) ease; }
+  #fameFill{ background: var(--accent); }
+
+  /* ---- screens ---- */
   .screen{ flex:1; display:none; flex-direction:column; }
   .screen.active{ display:flex; }
-  .scroll{ flex:1; overflow-y:auto; padding: 18px; display:flex; flex-direction:column; gap:16px; min-height: 480px; }
+  .scroll{ flex:1; overflow-y:auto; overflow-x:hidden; scrollbar-gutter: stable; padding:16px 14px; display:flex; flex-direction:column; gap:14px; min-height:480px; }
 
-  #intro .scroll{ justify-content:center; align-items:center; text-align:center; gap:16px; }
-  #intro .display{ font-size: 32px; line-height:1.2; }
-  #intro p{ color: var(--text-lo); font-size: 14px; line-height:1.6; max-width: 310px; }
-  .goal-badge{ font-size: 12px; color: var(--accent); border:1px solid rgba(29,155,240,0.35); background: var(--accent-tint); padding: 6px 12px; border-radius: 999px; font-weight:700; }
+  /* intro / profile */
+  .ig-profile{ align-items:center; text-align:center; justify-content:center; gap:10px; }
+  .profile-avatar{
+    width:84px; height:84px; border-radius:50%; background:var(--grad);
+    display:flex; align-items:center; justify-content:center; font-size:36px; margin-bottom:4px;
+  }
+  .profile-handle{ font-size:17px; font-weight:800; }
+  .profile-bio{ font-size:13px; color:var(--text-lo); max-width:260px; }
+  .profile-stats-row{ display:flex; gap:26px; margin:8px 0; }
+  .profile-stats-row div{ text-align:center; }
+  .profile-stats-row b{ display:block; font-size:15px; font-weight:800; }
+  .profile-stats-row span{ font-size:11px; color:var(--text-lo); }
+  .goal-badge{
+    font-size:12px; font-weight:700; color:var(--a2);
+    background: rgba(147,51,234,0.08); border:1px solid rgba(147,51,234,0.25);
+    padding:6px 12px; border-radius:999px;
+  }
+  .intro-desc{ font-size:13px; color:var(--text-lo); line-height:1.6; max-width:280px; margin:4px 0 6px; }
 
-  .situation{ background: var(--card); border:1px solid var(--card-border); border-radius: var(--radius-card); padding: 16px; }
-  .situation .tag{ font-size:11px; color: var(--accent); margin-bottom:6px; font-weight:700; }
-  .situation h2{ font-size: 17px; margin: 0 0 8px; font-weight:800; color: var(--text-hi); }
-  .situation p{ font-size: 14px; line-height:1.6; color: #3c4650; margin:0; }
-  .mission{ font-size: 13px; color: var(--text-lo); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); }
+  /* buttons */
+  .btn{ border:none; border-radius:10px; padding:13px 18px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; }
+  .btn-primary{ background: var(--grad); color:#fff; width:100%; }
+  .btn-ghost{ background:transparent; border:1px solid var(--border); color:var(--text-hi); width:100%; }
+  .btn-share{
+    border:none; border-radius:10px; padding:13px; font-size:14.5px; font-weight:800;
+    background: var(--grad); color:#fff; width:100%; cursor:pointer; font-family:inherit;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .btn-share:disabled{ opacity:0.35; cursor:not-allowed; }
+  .btn-share:active{ transform: scale(0.98); }
 
-  textarea{ width:100%; min-height: 110px; resize: vertical; background: #fff; border:1px solid var(--card-border); border-radius: 14px; color: var(--text-hi); font-size:14px; padding:12px; font-family: inherit; line-height:1.5; }
-  textarea:focus{ outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
-  textarea::placeholder{ color: #8a94a0; }
+  /* stage: situation + compose */
+  .situation-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-card); padding:14px; }
+  .situation-card .tag{ font-size:11px; font-weight:800; color:var(--a2); margin-bottom:5px; }
+  .situation-card h2{ font-size:16px; margin:0 0 7px; font-weight:800; }
+  .situation-card p{ font-size:13.5px; line-height:1.6; color:#3c3c3c; margin:0; }
+  .situation-card .mission{ font-size:12.5px; color:var(--text-lo); margin-top:9px; padding-top:9px; border-top:1px dashed var(--border); }
 
-  .btn{ border:none; border-radius: 999px; padding: 13px 18px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease; }
-  .btn:active{ transform: scale(0.97); }
-  .btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
-  .btn-primary{ background: var(--accent); color: #ffffff; }
-  .btn-primary:hover:not(:disabled){ background: #1a8cd8; }
-  .btn-primary:disabled{ opacity:0.4; cursor:not-allowed; }
-  .btn-ghost{ background: transparent; border:1px solid var(--card-border); color: var(--text-hi); }
-  .btn-ghost:hover{ background: var(--line); }
+  .compose-box{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-card); padding:10px; }
+  textarea{ width:100%; min-height:100px; resize:vertical; border:none; outline:none; font-family:inherit; font-size:14px; color:var(--text-hi); }
+  textarea::placeholder{ color:#b0b0b0; }
 
-  .post{ background: var(--post); border:1px solid var(--card-border); border-radius: var(--radius-card); padding: 14px; opacity:0; transform: translateY(8px); animation: rise var(--dur) ease forwards; }
+  .profanity-warn{ font-size:12.5px; color:var(--danger); font-weight:700; background:#fdecee; border-radius:10px; padding:9px 11px; }
+
+  /* result: IG-style post card */
+  .ig-post{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-card); overflow:hidden; opacity:0; transform:translateY(8px); animation: rise var(--dur) ease forwards; }
   @keyframes rise{ to{ opacity:1; transform:none; } }
-  .post .handle{ font-size:13px; color: var(--text-hi); font-weight:700; margin-bottom:8px; }
-  .post .body{ font-size: 14.5px; line-height:1.6; white-space:pre-wrap; color: var(--text-hi); }
-  .post .stats{ display:flex; gap:16px; margin-top:10px; font-size:12px; color: var(--text-lo); font-weight:600; }
+  .post-head{ display:flex; align-items:center; gap:9px; padding:10px 12px; }
+  .post-avatar{ width:30px; height:30px; border-radius:50%; background:var(--grad); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .post-user{ font-size:13px; font-weight:700; flex:1; }
+  .post-more{ color:var(--text-lo); font-weight:900; letter-spacing:1px; }
+  .post-media{
+    background: linear-gradient(160deg, #eef0ff, #fbe9f5);
+    min-height:150px; display:flex; align-items:center; justify-content:center; padding:22px;
+  }
+  .post-media-text{ font-size:16px; font-weight:800; line-height:1.5; text-align:center; color:#2a2a3a; white-space:pre-wrap; overflow-wrap:break-word; word-break:break-word; }
+  .post-actions{ display:flex; align-items:center; gap:16px; padding:10px 12px 6px; color:var(--text-hi); }
+  .post-actions svg{ width:23px; height:23px; }
+  .post-actions .icon-count{ display:flex; align-items:center; gap:5px; font-size:13px; font-weight:700; color:var(--text-hi); }
+  .post-actions .spacer{ flex:1; }
+  .post-comments-label{ padding:5px 12px 4px; font-size:11.5px; font-weight:400; line-height:1.5; color:var(--text-lo); }
+  .reactions{ display:flex; flex-direction:column; gap:5px; padding:0 12px 2px; }
+  .reaction{ font-size:12px; line-height:1.6; overflow-wrap:anywhere; color:#525252; opacity:0; transform:translateY(4px); animation: rise 0.3s ease forwards; }
+  .reaction b{ color:var(--text-hi); font-weight:600; margin-right:6px; }
+  .post-time{ font-size:10.5px; color:#b7b7b7; padding:6px 12px 12px; text-transform:uppercase; letter-spacing:0.03em; }
 
-  .reactions{ display:flex; flex-direction:column; gap:6px; min-height: 20px; }
-  .reaction{ font-size: 13px; color: #3c4650; background: var(--line); border-radius: 12px; padding: 8px 10px; opacity:0; transform: translateY(4px); animation: rise 0.3s ease forwards; }
-  .reaction b{ color: var(--text-hi); margin-right:6px; }
-
-  .deltas{ display:flex; gap:10px; }
-  .delta-chip{ flex:1; text-align:center; padding:10px; border-radius:12px; font-size:13px; color: var(--text-lo); background: #ffffff; border:1px solid var(--card-border); }
+  .deltas{ display:flex; gap:9px; }
+  .delta-chip{ flex:1; text-align:center; padding:10px; border-radius:10px; font-size:12.5px; color:var(--text-lo); background:var(--card); border:1px solid var(--border); }
   .delta-chip .n{ display:block; font-size:16px; font-weight:800; margin-top:2px; }
-  .delta-chip.fame .n{ color: var(--accent); }
-  .delta-chip.risk .n{ color: var(--warn); }
+  .delta-chip.fame .n{ color:var(--a1); }
+  .delta-chip.risk .n{ color:var(--warn); }
 
-  details.reveal{ font-size:12.5px; color: var(--text-lo); }
-  details.reveal summary{ cursor:pointer; color: var(--accent); font-weight:700; list-style:none; }
+  details.reveal{ font-size:12.5px; color:var(--text-lo); }
+  details.reveal summary{ cursor:pointer; color:var(--a2); font-weight:700; list-style:none; }
   details.reveal summary::-webkit-details-marker{ display:none; }
   details.reveal[open] summary{ margin-bottom:6px; }
-  .fallback-warn{ font-size:11.5px; color: var(--warn); margin-top:4px; }
-  .profanity-warn{ font-size:12.5px; color: var(--danger); font-weight:700; background: #fdf1f1; border-radius:10px; padding:9px 11px; }
+  .fallback-warn{ font-size:11.5px; color:var(--warn); margin-top:4px; }
 
-  .end-hero{ text-align:center; padding: 6px 4px 2px; }
-  .end-hero .display{ font-size: 25px; line-height:1.3; }
-  .end-hero p{ font-size:13.5px; color: var(--text-lo); margin-top:8px; line-height:1.6; }
-  .end-stats{ display:flex; gap:10px; }
+  /* gameover / ending */
+  .end-hero{ text-align:center; padding:6px 4px 2px; }
+  .end-hero .display{ font-size:23px; line-height:1.3; }
+  .end-hero p{ font-size:13px; color:var(--text-lo); margin-top:8px; line-height:1.6; }
+  .end-stats{ display:flex; gap:9px; }
   .consequence-list{ display:flex; flex-direction:column; gap:8px; }
-  .consequence{ background: #fdf1f1; border-left: 3px solid var(--danger); border-radius: 10px; padding: 10px 12px; font-size:13px; line-height:1.55; color:#4a1618; }
-  .reflect{ background: var(--line); border-radius:12px; padding:12px; font-size:13px; color: var(--text-lo); line-height:1.7; }
+  .consequence{ background:#fdecee; border-left:3px solid var(--danger); border-radius:10px; padding:10px 12px; font-size:12.5px; line-height:1.55; color:#4a1618; }
+  .reflect{ background:#f4f4f6; border-radius:12px; padding:12px; font-size:12.5px; color:var(--text-lo); line-height:1.7; }
   .reflect li{ margin-bottom:6px; }
+
+  /* bottom nav (decorative) */
+  .bottomnav{ display:flex; justify-content:center; gap:clamp(20px, 7vw, 42px); align-items:center; width:100%; padding:14px 12px; border-top:1px solid var(--border); background:#fff; }
+  .bottomnav svg{ width:24px; height:24px; color:var(--text-hi); }
+  .bottomnav .nav-avatar{ width:22px; height:22px; border-radius:50%; background:var(--grad); }
+  /* Clear account icons and consistently visible controls */
+  .account-icon{ width:24px; height:24px; display:block; flex-shrink:0; }
+  .avatar-inner{ color:#526174; }
+  .profile-avatar, .post-avatar, .bottomnav .nav-avatar{
+    background:#edf1f5; color:#526174; display:flex; align-items:center; justify-content:center;
+  }
+  .profile-avatar .account-icon{ width:44px; height:44px; }
+  .post-avatar .account-icon{ width:19px; height:19px; }
+  .bottomnav > *{ flex:0 0 24px; }
+  .bottomnav .nav-avatar{ width:24px; height:24px; }
+  .bottomnav .nav-avatar .account-icon{ width:20px; height:20px; color:#526174; }
+  .goal-badge{ background:#eef5fc; border-color:#d3e4f5; }
+  .btn-primary, .btn-share{ min-height:48px; flex-shrink:0; }
+  .btn-primary:hover, .btn-share:not(:disabled):hover{ background:#105fad; }
+  .btn-share:disabled{ background:#e4eaf0; color:#6b7785; opacity:1; }
+  button:focus-visible, textarea:focus-visible{ outline:3px solid #1675d1; outline-offset:3px; }
+  html{ display:block; padding:0; }
+  body{ width:100%; min-height:100vh; min-height:100dvh; }
+  .scroll{ scrollbar-gutter:auto; }
+  @media(max-width:440px){
+    body{ padding:0; }
+    .phone{ width:100%; min-height:100vh; min-height:100dvh; border-radius:0; }
+  }
 </style>
 </head>
 <body>
 
 <div class="phone">
   <header>
-    <div class="wordmark">
-      <span class="display name">페이크 인플루언서</span>
-      <span class="stagepos" id="stagepos"></span>
-    </div>
-    <div class="gauges">
-      <div class="gauge-row">
-        <span class="gauge-label">팔로워</span>
-        <div class="gauge-track"><div class="gauge-fill fame" id="fameFill" style="width:0%"></div></div>
-        <span class="gauge-value fame" id="fameValue">0</span>
+    <div class="topbar">
+      <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      <span class="wordmark">yangstagram
+        <svg class="verified" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l2.4 1.6 2.8-.5 1.3 2.5 2.5 1.3-.5 2.8L22 12l-1.6 2.4.5 2.8-2.5 1.3-1.3 2.5-2.8-.5L12 22l-2.4-1.6-2.8.5-1.3-2.5-2.5-1.3.5-2.8L2 12l1.6-2.4-.5-2.8 2.5-1.3 1.3-2.5 2.8.5z"/><path d="M9 12l2 2 4-4" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <div class="topicons">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
       </div>
-      <div class="gauge-row">
-        <span class="gauge-label">위험도</span>
+    </div>
+    <div class="progress-row" id="dots"></div>
+    <div class="stats-row">
+      <div class="avatar-ring" id="avatarRing"><div class="avatar-inner"><svg class="account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></div></div>
+      <div class="stats-text">
+        <div class="handle-line">yangstagram <span class="stagepos" id="stagepos"></span></div>
+        <div class="stat-numbers"><span>팔로워 <b id="fameValue">0</b></span><span>위험도 <b id="riskValue">0</b></span></div>
+        <div class="gauge-track"><div class="gauge-fill" id="fameFill" style="width:0%"></div></div>
         <div class="gauge-track"><div class="gauge-fill" id="riskFill" style="width:0%; background:var(--safe);"></div></div>
-        <span class="gauge-value" id="riskValue">0</span>
       </div>
     </div>
-    <div class="dots" id="dots"></div>
   </header>
 
   <!-- INTRO -->
   <section class="screen active" id="intro">
-    <div class="scroll">
+    <div class="scroll ig-profile">
+      <div class="profile-avatar"><svg class="account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></div>
+      <div class="profile-handle">yangstagram</div>
+      <div class="profile-bio">자극적인 이슈, 발 빠르게 전해드립니다</div>
+      <div class="profile-stats-row">
+        <div><b>0</b><span>게시물</span></div>
+        <div><b>0</b><span>팔로워</span></div>
+        <div><b>6</b><span>단계</span></div>
+      </div>
       <span class="goal-badge">목표: 팔로워 10,000명</span>
-      <div class="display">익명 계정<br>"오늘의 이슈"</div>
-      <p>당신은 이 계정의 관리자입니다. 6번의 선택으로 팔로워를 최대한 늘려보세요. 단, 위험도가 너무 오르면 계정이 정지됩니다.</p>
-      <button class="btn btn-primary" style="width:100%" onclick="startGame()">시작하기</button>
+      <p class="intro-desc">당신은 이 계정의 관리자입니다. 6번의 선택으로 팔로워를 최대한 늘려보세요. 단, 위험도가 너무 오르면 계정이 정지됩니다.</p>
+      <button class="btn btn-primary" onclick="startGame()">시작하기</button>
     </div>
   </section>
 
   <!-- STAGE (input) -->
   <section class="screen" id="stage">
     <div class="scroll">
-      <div class="situation">
+      <div class="situation-card">
         <div class="tag" id="stageTag">1단계 · 사칭하기</div>
         <h2 id="stageTitle"></h2>
         <p id="stageSituation"></p>
         <div class="mission">팔로워를 최대한 늘릴 수 있도록 자유롭게 게시물을 작성해보세요. (2~3문장 정도면 충분해요)</div>
       </div>
-      <textarea id="answerInput" placeholder="여기에 게시물 내용을 입력하세요..."></textarea>
-      <div class="profanity-warn" id="profanityWarn" style="display:none;">⚠️ 부적절한 표현이 포함되어 있습니다. 내용을 확인하고 다시 작성해주세요.</div>
-      <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()" disabled>게시하기</button>
+      <div class="compose-box">
+        <textarea aria-label="게시물 내용" id="answerInput" placeholder="게시물 내용을 2자 이상 입력하세요..."></textarea>
+      </div>
+      <div class="profanity-warn" id="profanityWarn" style="display:none;">부적절한 표현이 포함되어 있습니다. 내용을 확인하고 다시 작성해주세요.</div>
+      <button class="btn-share" id="submitBtn" onclick="submitAnswer()" disabled>게시하기</button>
     </div>
   </section>
 
   <!-- RESULT -->
   <section class="screen" id="result">
     <div class="scroll">
-      <div class="post" id="postCard">
-        <div class="handle">@오늘의이슈</div>
-        <div class="body" id="postBody"></div>
-        <div class="stats"><span id="likeStat">❤ 좋아요 0</span><span id="shareStat">🔁 공유 0</span></div>
+      <div class="ig-post" id="postCard">
+        <div class="post-head">
+          <div class="post-avatar"><svg class="account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></div>
+          <div class="post-user">yangstagram</div>
+          <div class="post-more">•••</div>
+        </div>
+        <div class="post-media"><div class="post-media-text" id="postBody"></div></div>
+        <div class="post-actions">
+          <span class="icon-count">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+            <span id="likeStat">0</span>
+          </span>
+          <span class="icon-count">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <span id="shareStat">0</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+          <span class="spacer"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="post-comments-label" id="commentsLabel">댓글 0개</div>
+        <div class="reactions" id="reactionsBox"></div>
+        <div class="post-time">방금 전</div>
       </div>
-      <div class="reactions" id="reactionsBox"></div>
       <div class="deltas">
         <div class="delta-chip fame"><span>팔로워</span><span class="n" id="deltaFame">+0</span></div>
         <div class="delta-chip risk"><span>위험도</span><span class="n" id="deltaRisk">+0</span></div>
       </div>
       <details class="reveal">
-        <summary>💡 왜 이런 결과가 나왔을까?</summary>
+        <summary>왜 이런 결과가 나왔을까?</summary>
         <div id="feedbackText"></div>
-        <div class="fallback-warn" id="fallbackWarn" style="display:none;">⚠️ API 응답을 받지 못해 임시 판정을 사용했습니다</div>
+        <div class="fallback-warn" id="fallbackWarn" style="display:none;">API 응답을 받지 못해 임시 판정을 사용했습니다</div>
       </details>
-      <button class="btn btn-primary" id="nextBtn" style="width:100%" onclick="proceed()">다음 단계로 →</button>
+      <button class="btn-share" id="nextBtn" onclick="proceed()">다음 단계로 →</button>
     </div>
   </section>
 
@@ -201,7 +307,7 @@
   <section class="screen" id="gameover">
     <div class="scroll">
       <div class="end-hero">
-        <div class="display" style="color:var(--danger)">⚠️ 계정이 정지되었습니다</div>
+        <div class="display" style="color:var(--danger)">계정이 정지되었습니다</div>
         <p>위험도가 임계치를 넘어 신고가 누적되었습니다. 더 이상 게시물을 올릴 수 없습니다.</p>
       </div>
       <div class="end-stats">
@@ -214,7 +320,7 @@
           <li>팔로워를 조금 덜 얻더라도, 다르게 썼다면 계정이 정지되지 않았을까요?</li>
         </ul>
       </div>
-      <button class="btn btn-ghost" style="width:100%" onclick="resetGame()">다시 시작</button>
+      <button class="btn btn-ghost" onclick="resetGame()">다시 시작</button>
     </div>
   </section>
 
@@ -223,9 +329,17 @@
     <div class="scroll" id="endingScroll"></div>
   </section>
 
+  <div class="bottomnav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+    <div class="nav-avatar"><svg class="account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></div>
+  </div>
 </div>
 
 <script>
+
 /* ============ 단계 데이터 (학생 화면에는 situation/mission만 노출) ============ */
 const STAGES = [
   {
@@ -286,7 +400,7 @@ const STAGES = [
 
 const RISK_GAMEOVER = 80;
 const RISK_WARN = 60;
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbySbidnM6PpNwS6xGcSU8PsyjVoOylZtsd2NjqnQM_aHadJQO61GUuL-8ozjle-5ldm/exec';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4n71bcGolD8wN-Tw2PK5tA66JjUxDccU-hy86R1ANGNKlWd1of_I0NvuxbsIGL2ij/exec';
 
 /* ---- 부적절한 표현 필터 (욕설·성적 표현 감지) ---- */
 const BANNED_TERMS = [
@@ -335,8 +449,13 @@ function updateGauges(){
   const riskPct = Math.min(100, state.risk);
   const fill = $('riskFill');
   fill.style.width = riskPct + '%';
-  fill.style.background = state.risk >= RISK_GAMEOVER ? 'var(--danger)' : (state.risk >= RISK_WARN ? 'var(--warn)' : 'var(--safe)');
+  const riskZone = state.risk >= RISK_GAMEOVER ? 'danger' : (state.risk >= RISK_WARN ? 'warn' : 'safe');
+  fill.style.background = riskZone === 'danger' ? 'var(--danger)' : (riskZone === 'warn' ? 'var(--warn)' : 'var(--safe)');
   $('riskValue').textContent = Math.round(state.risk);
+  const ring = $('avatarRing');
+  ring.classList.remove('warn','danger');
+  if(riskZone === 'warn') ring.classList.add('warn');
+  if(riskZone === 'danger') ring.classList.add('danger');
   buildDots();
 }
 
@@ -388,6 +507,7 @@ function fallbackClassify(stageData, text){
 }
 
 async function submitAnswer(){
+  if($('submitBtn').disabled) return;
   const s = STAGES[state.stage];
   const text = $('answerInput').value.trim();
 
@@ -433,8 +553,9 @@ function applyResult(s, text, result, usedFallback){
   state.risk += riskDelta;
 
   $('postBody').textContent = text;
-  $('likeStat').textContent = '❤ 좋아요 ' + Math.round(followerDelta*0.15).toLocaleString();
-  $('shareStat').textContent = '🔁 공유 ' + Math.round(followerDelta*0.06).toLocaleString();
+  $('likeStat').textContent = Math.round(followerDelta*0.15).toLocaleString();
+  $('shareStat').textContent = reactionCount;
+  $('commentsLabel').textContent = reactionCount ? '댓글 ' + reactionCount + '개' : '아직 댓글이 없습니다';
 
   const box = $('reactionsBox'); box.innerHTML = '';
   (result.simulated_reactions || []).forEach((r, idx) => {
