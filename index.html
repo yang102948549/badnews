@@ -164,6 +164,20 @@
   details.reveal[open] summary{ margin-bottom:6px; }
   .fallback-warn{ font-size:11.5px; color:var(--warn); margin-top:4px; }
 
+  .eval-list{ display:flex; flex-direction:column; gap:8px; }
+  .eval-item{ display:flex; gap:9px; align-items:flex-start; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:12.5px; line-height:1.55; color:#3c3c3c; }
+  .eval-badge{ flex-shrink:0; font-size:10.5px; font-weight:800; padding:3px 9px; border-radius:999px; color:#fff; margin-top:1px; }
+  .eval-badge.A{ background:var(--safe); }
+  .eval-badge.B{ background:var(--warn); }
+  .eval-badge.C{ background:var(--danger); }
+
+  .score-card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; text-align:center; }
+  .score-grade{ font-size:42px; font-weight:900; color:var(--accent); line-height:1; }
+  .score-label{ font-size:13px; font-weight:700; color:var(--text-hi); margin-top:4px; }
+  .score-total{ font-size:12.5px; color:var(--text-lo); margin-top:6px; }
+  .score-breakdown{ display:flex; justify-content:center; gap:20px; margin-top:12px; font-size:11.5px; color:var(--text-lo); }
+  .score-breakdown b{ display:block; color:var(--text-hi); font-size:15px; font-weight:800; }
+
   /* gameover / ending */
   .end-hero{ text-align:center; padding:6px 4px 2px; }
   .end-hero .display{ font-size:23px; line-height:1.3; }
@@ -178,7 +192,6 @@
   .bottomnav{ display:flex; justify-content:center; gap:clamp(20px, 7vw, 42px); align-items:center; width:100%; padding:14px 12px; border-top:1px solid var(--border); background:#fff; }
   .bottomnav svg{ width:24px; height:24px; color:var(--text-hi); }
   .bottomnav .nav-avatar{ width:22px; height:22px; border-radius:50%; background:var(--grad); }
-  /* Clear account icons and consistently visible controls */
   .account-icon{ width:24px; height:24px; display:block; flex-shrink:0; }
   .avatar-inner{ color:#526174; }
   .profile-avatar, .post-avatar, .bottomnav .nav-avatar{
@@ -193,6 +206,22 @@
   .btn-primary, .btn-share{ min-height:48px; flex-shrink:0; }
   .btn-primary:hover, .btn-share:not(:disabled):hover{ background:#105fad; }
   .btn-share:disabled{ background:#e4eaf0; color:#6b7785; opacity:1; }
+
+  /* ---- 로딩 스피너 ---- */
+  .spinner{
+    display:inline-block; width:15px; height:15px; border-radius:50%;
+    border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
+    animation: spin 0.7s linear infinite; vertical-align:middle;
+  }
+  .spinner.dark{ border-color:var(--border); border-top-color:var(--accent); }
+  .spinner-lg{ width:32px; height:32px; border-width:3px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .spinner{ animation-duration:1.4s; } }
+
+  .btn-inline-spinner{ display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; }
+
+  .loading-block{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:70px 20px; text-align:center; flex:1; }
+  .loading-block p{ font-size:13px; color:var(--text-lo); margin:0; }
   button:focus-visible, textarea:focus-visible{ outline:3px solid #1675d1; outline-offset:3px; }
   html{ display:block; padding:0; }
   body{ width:100%; min-height:100vh; min-height:100dvh; }
@@ -202,7 +231,6 @@
     .phone{ width:100%; min-height:100vh; min-height:100dvh; border-radius:0; }
   }
 
-  /* Let the reading and writing areas use the available screen height. */
   .phone{ min-height:max(760px, calc(100dvh - 48px)); }
   #stage .scroll, #result .scroll{ gap:16px; }
   .situation-card{ flex:1 0 auto; min-height:250px; padding:22px 20px; display:flex; flex-direction:column; }
@@ -317,11 +345,10 @@
         <div class="delta-chip fame"><span>팔로워</span><span class="n" id="deltaFame">+0</span></div>
         <div class="delta-chip risk"><span>위험도</span><span class="n" id="deltaRisk">+0</span></div>
       </div>
-      <div class="fallback-warn" id="fallbackWarn" role="status" style="display:none;">연결이 원활하지 않아 준비된 댓글과 임시 판정을 표시합니다.</div>
+      <div class="fallback-warn" id="fallbackWarn" role="status" style="display:none;"></div>
       <details class="reveal">
         <summary>왜 이런 결과가 나왔을까?</summary>
         <div id="feedbackText"></div>
-
       </details>
       <button class="btn-share" id="nextBtn" onclick="proceed()">다음 단계로 →</button>
     </div>
@@ -440,7 +467,7 @@ function containsBannedContent(text){
   return BANNED_TERMS.some(term => normalized.includes(term));
 }
 
-let state = { stage: 0, fame: 0, risk: 0 };
+let state = { stage: 0, fame: 0, risk: 0, history: [] };
 
 function $(id){ return document.getElementById(id); }
 function showScreen(id){
@@ -484,7 +511,7 @@ function updateGauges(){
 }
 
 function startGame(){
-  state = { stage:0, fame:0, risk:0 };
+  state = { stage:0, fame:0, risk:0, history:[] };
   updateGauges();
   renderStage();
   showScreen('stage');
@@ -514,7 +541,10 @@ async function judgeWithGemini(stageIndex, text){
   return data;
 }
 
-/* ---- 폴백: API 실패 시 사용하는 간이 키워드 판정 ---- */
+/* ---- 폴백: API 실패 시 사용하는 간이 키워드 판정 ----
+   API가 실패했을 때만 쓰는 최후의 안전장치이므로, 일상적인 말투
+   (가벼운 'ㅋㅋ', 물음표 하나 정도)까지 조작으로 잡지 않도록
+   기준을 훨씬 보수적으로 잡는다. 애매하면 A(정직) 쪽으로 둔다. */
 function fallbackClassify(stageData, text){
   const laughs = (text.match(/ㅋ{2,}|ㄷㄷ/g) || []).length;
   const exclaims = (text.match(/[!?]/g) || []).length;
@@ -522,8 +552,8 @@ function fallbackClassify(stageData, text){
   const midHint = /아쉬웠|의아|이상하긴|왜 갑자기|넘어가/.test(text);
 
   let cls, ratio;
-  if(strongHint || laughs >= 2 || exclaims >= 3){ cls='C'; ratio=0.8; }
-  else if(midHint || laughs>=1 || exclaims>=1){ cls='B'; ratio=0.4; }
+  if(strongHint){ cls='C'; ratio=0.8; }
+  else if(midHint || laughs>=3 || exclaims>=4){ cls='B'; ratio=0.4; }
   else { cls='A'; ratio=0.05; }
 
   const reacts = stageData.reactions[cls].map((t,i) => ({ author: ['ㅇㅇ','ㅁㅁ','ㅂㅂ'][i%3], text: t }));
@@ -542,22 +572,23 @@ async function submitAnswer(){
   $('profanityWarn').style.display = 'none';
 
   $('submitBtn').disabled = true;
-  $('submitBtn').textContent = '게시 중...';
+  $('submitBtn').innerHTML = '<span class="btn-inline-spinner"><span class="spinner"></span>게시 중...</span>';
 
-  let result, usedFallback = false;
+  let result, usedFallback = false, apiErrorMsg = '';
   try{
     result = await judgeWithGemini(state.stage, text);
   }catch(err){
     console.warn('Gemini 호출 실패, 폴백 판정 사용:', err.message);
+    apiErrorMsg = err.message || String(err);
     result = fallbackClassify(s, text);
     usedFallback = true;
   }
 
   $('submitBtn').textContent = '게시하기';
-  applyResult(s, text, result, usedFallback);
+  applyResult(s, text, result, usedFallback, apiErrorMsg);
 }
 
-function applyResult(s, text, result, usedFallback){
+function applyResult(s, text, result, usedFallback, apiErrorMsg){
   const ratio = Math.max(0, Math.min(1, Number(result.follower_ratio) || 0));
   const reactionCount = (result.simulated_reactions || []).length;
 
@@ -575,6 +606,7 @@ function applyResult(s, text, result, usedFallback){
 
   state.fame += followerDelta;
   state.risk += riskDelta;
+  state.history[state.stage] = { text: text, classification: result.classification };
 
   $('postBody').textContent = text;
   $('likeStat').textContent = Math.round(followerDelta*0.15).toLocaleString();
@@ -596,7 +628,14 @@ function applyResult(s, text, result, usedFallback){
   $('deltaFame').textContent = '+' + followerDelta.toLocaleString();
   $('deltaRisk').textContent = '+' + riskDelta;
   $('feedbackText').textContent = '[' + result.classification + '] ' + result.feedback_to_student;
-  $('fallbackWarn').style.display = usedFallback ? 'block' : 'none';
+
+  const warnEl = $('fallbackWarn');
+  if(usedFallback){
+    warnEl.textContent = '⚠️ API 연결 실패로 임시 판정을 사용했습니다' + (apiErrorMsg ? ' (' + apiErrorMsg + ')' : '');
+    warnEl.style.display = 'block';
+  } else {
+    warnEl.style.display = 'none';
+  }
 
   updateGauges();
 
@@ -608,7 +647,7 @@ function applyResult(s, text, result, usedFallback){
   showScreen('result');
 }
 
-function proceed(){
+async function proceed(){
   if(state.risk >= RISK_GAMEOVER){
     $('goFame').textContent = state.fame.toLocaleString();
     $('goStage').textContent = (state.stage+1) + '단계';
@@ -620,41 +659,134 @@ function proceed(){
     renderStage();
     showScreen('stage');
   } else {
-    renderEnding();
     showScreen('ending');
+    $('endingScroll').innerHTML = '<div class="loading-block"><span class="spinner dark spinner-lg"></span><p>지금까지 남긴 게시물을 다시 살펴보고 있어요.</p></div>';
+    await renderEnding();
   }
 }
 
-function renderEnding(){
+/* ---- 6단계 완주 후, 실제로 쓴 글 전체를 GAS로 보내 엔딩 평가를 요청 ---- */
+async function fetchEndingConsequences(){
+  try{
+    const res = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ mode: 'ending', history: state.history })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    return data; // { consequences: [{stage_index, text}], closing_line }
+  }catch(err){
+    console.warn('엔딩 평가 API 실패, 기본 문구로 대체:', err.message);
+    return null;
+  }
+}
+
+const CONSEQUENCES = [
+  "과장된 상품 설명을 믿고 물건을 샀던 사람이 환불도 못 받고 피해를 보고 있습니다.",
+  "배달 음식점 사장님이 근거 없는 불매 여론에 시달리다 폐업을 고민하고 있습니다.",
+  "층간소음 갈등을 겪던 윗집 주민이 쏟아진 비난 속에 이사를 고민하고 있습니다.",
+  "스터디카페 사장님은 환불이 늦어진 억울한 사정과 무관하게 사기꾼으로 낙인찍혔습니다.",
+  "억울하게 사기꾼으로 몰렸던 판매자는 계속되는 악플에 시달리고 있습니다.",
+  "근거 없는 조롱을 당했던 팔로워는 더 이상 댓글을 달지 않게 되었습니다."
+];
+
+/* ---- 종합 점수: 팔로워(성장) 60점 + 정직도(A/B/C 이력) 40점 ---- */
+function computeFinalScore(){
+  const FOLLOWER_GOAL = 10000;
+  const followerScore = Math.min(state.fame / FOLLOWER_GOAL, 1) * 60;
+
+  const weights = { A: 1, B: 0.5, C: 0 };
+  const valid = state.history.filter(h => h && h.classification);
+  const ethicsRaw = valid.reduce((sum, h) => sum + (weights[h.classification] ?? 0), 0);
+  const ethicsScore = valid.length ? (ethicsRaw / valid.length) * 40 : 0;
+
+  return {
+    total: Math.round(followerScore + ethicsScore),
+    followerScore: Math.round(followerScore),
+    ethicsScore: Math.round(ethicsScore)
+  };
+}
+function getGrade(total){
+  if(total >= 90) return { letter: 'S', label: '존경받는 인플루언서' };
+  if(total >= 70) return { letter: 'A', label: '신뢰받는 크리에이터' };
+  if(total >= 50) return { letter: 'B', label: '그럭저럭 성장한 계정' };
+  if(total >= 30) return { letter: 'C', label: '위태로운 인기' };
+  return { letter: 'D', label: '존재감 없는 계정' };
+}
+
+async function renderEnding(){
   const box = $('endingScroll');
   const fame = state.fame;
+  const cStages = state.history
+    .map((h, i) => ({ h, i }))
+    .filter(x => x.h && x.h.classification === 'C');
+
+  const apiResult = await fetchEndingConsequences();
+
+  // evaluations: 6단계 전부에 대한 A/B/C 평가 코멘트 — API 우선, 실패 시 로컬 STAGES.feedback으로 대체
+  let evalEntries;
+  if(apiResult && Array.isArray(apiResult.evaluations) && apiResult.evaluations.length){
+    evalEntries = apiResult.evaluations
+      .slice().sort((a,b) => a.stage_index - b.stage_index)
+      .map(e => ({ i: e.stage_index, cls: e.classification, comment: String(e.comment || '') }));
+  } else {
+    evalEntries = state.history.map((h, i) => h ? { i, cls: h.classification, comment: STAGES[i].feedback[h.classification] } : null).filter(Boolean);
+  }
+
+  // consequenceEntries: C 단계에 대한 현실 피해 문구 — API 우선, 실패 시 로컬 고정 문구로 대체
+  let consequenceEntries;
+  if(apiResult && Array.isArray(apiResult.consequences) && apiResult.consequences.length){
+    consequenceEntries = apiResult.consequences.map(c => ({ text: String(c.text || '') }));
+  } else {
+    consequenceEntries = cStages.map(x => ({ text: CONSEQUENCES[x.i] }));
+  }
+
+  const closingLine = apiResult && apiResult.closing_line ? String(apiResult.closing_line) : '';
+
   let html = '';
+  const score = computeFinalScore();
+  const grade = getGrade(score.total);
+  const scoreCardHtml = `
+    <div class="score-card">
+      <div class="score-grade">${grade.letter}</div>
+      <div class="score-label">${grade.label}</div>
+      <div class="score-total">종합 점수 ${score.total} / 100</div>
+      <div class="score-breakdown">
+        <span><b>${score.followerScore}</b>/60 · 성장</span>
+        <span><b>${score.ethicsScore}</b>/40 · 정직도</span>
+      </div>
+    </div>`;
   if(fame >= 10000){
     html += `
       <div class="end-hero">
         <div class="display" style="color:var(--accent)">축하합니다!<br>팔로워 10,000명 달성</div>
         <p>당신은 '네임드' 계정이 되었습니다. 그런데—</p>
       </div>
-      <div class="consequence-list">
-        <div class="consequence">과장된 상품 설명을 믿고 물건을 샀던 사람이 환불도 못 받고 피해를 보고 있습니다.</div>
-        <div class="consequence">배달 음식점 사장님이 근거 없는 불매 여론에 시달리다 폐업을 고민하고 있습니다.</div>
-        <div class="consequence">층간소음 갈등을 겪던 윗집 주민이 쏟아진 비난 속에 이사를 고민하고 있습니다.</div>
-        <div class="consequence">스터디카페 사장님은 환불이 늦어진 억울한 사정과 무관하게 사기꾼으로 낙인찍혔습니다.</div>
-        <div class="consequence">억울하게 사기꾼으로 몰렸던 판매자는 계속되는 악플에 시달리고 있습니다.</div>
-        <div class="consequence">경찰 사이버수사대에 접수되어 운영자의 신원이 특정되었고, 정보통신망법 위반 혐의로 조사를 받게 되었습니다.</div>
-      </div>`;
+      ${scoreCardHtml}
+      <div class="eval-list" id="evalList"></div>
+      <div class="consequence-list" id="consequenceList"></div>
+      <div class="consequence-list" id="finalConsequence"></div>`;
   } else if(fame >= 3000){
     html += `
       <div class="end-hero">
         <div class="display">유명해지긴 했지만,<br>완전히 뜨진 못했습니다</div>
         <p>팔로워 ${fame.toLocaleString()}명을 모으는 동안 위험도 ${Math.round(state.risk)}까지 올랐습니다.</p>
-      </div>`;
+      </div>
+      ${scoreCardHtml}
+      <div class="eval-list" id="evalList"></div>
+      <div class="consequence-list" id="consequenceList"></div>`;
   } else {
     html += `
       <div class="end-hero">
         <div class="display">조용하지만<br>떳떳한 계정</div>
         <p>당신은 유명해지지 못했지만, 아무도 다치지 않았습니다.</p>
-      </div>`;
+      </div>
+      ${scoreCardHtml}
+      <div class="eval-list" id="evalList"></div>`;
+  }
+  if(closingLine){
+    html += `<p style="text-align:center; font-size:12.5px; color:var(--text-lo); font-style:italic; margin:0;">${closingLine.replace(/</g,'&lt;')}</p>`;
   }
   html += `
     <div class="end-stats">
@@ -670,6 +802,47 @@ function renderEnding(){
     <button class="btn btn-ghost" style="width:100%" onclick="resetGame()">다시 시작</button>
   `;
   box.innerHTML = html;
+
+  // 단계별 A/B/C 평가 코멘트를 안전하게(텍스트로만) 채워 넣는다
+  const evalEl = $('evalList');
+  if(evalEl){
+    evalEntries.forEach(entry => {
+      const item = document.createElement('div');
+      item.className = 'eval-item';
+      const badge = document.createElement('span');
+      badge.className = 'eval-badge ' + entry.cls;
+      badge.textContent = entry.cls === 'A' ? '정직' : (entry.cls === 'B' ? '과장' : '조작');
+      const text = document.createElement('span');
+      text.textContent = (entry.i + 1) + '단계 — ' + entry.comment;
+      item.appendChild(badge);
+      item.appendChild(text);
+      evalEl.appendChild(item);
+    });
+  }
+
+  // API(또는 폴백)로 얻은 소비자 피해 문구를 안전하게(텍스트로만) 채워 넣는다
+  const listEl = $('consequenceList');
+  if(listEl){
+    consequenceEntries.forEach(entry => {
+      const div = document.createElement('div');
+      div.className = 'consequence';
+      div.textContent = entry.text;
+      listEl.appendChild(div);
+    });
+    if(!consequenceEntries.length){
+      const div = document.createElement('div');
+      div.className = 'consequence';
+      div.textContent = '이번엔 딱히 피해를 준 사람은 없어 보입니다 — 그래도 위험도가 쌓인 이유를 되짚어볼 필요는 있습니다.';
+      listEl.appendChild(div);
+    }
+  }
+  const finalEl = $('finalConsequence');
+  if(finalEl){
+    const div = document.createElement('div');
+    div.className = 'consequence';
+    div.textContent = '경찰 사이버수사대에 접수되어 운영자의 신원이 특정되었고, 정보통신망법 위반 혐의로 조사를 받게 되었습니다.';
+    finalEl.appendChild(div);
+  }
 }
 </script>
 </body>
