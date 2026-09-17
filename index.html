@@ -68,7 +68,7 @@
 
   .screen{ flex:1; display:none; flex-direction:column; }
   .screen.active{ display:flex; }
-  .scroll{ flex:1; overflow-y:auto; padding: 18px; display:flex; flex-direction:column; gap:16px; }
+  .scroll{ flex:1; overflow-y:auto; padding: 18px; display:flex; flex-direction:column; gap:16px; min-height: 480px; }
 
   #intro .scroll{ justify-content:center; align-items:center; text-align:center; gap:16px; }
   #intro .display{ font-size: 32px; line-height:1.2; }
@@ -429,7 +429,7 @@ function applyResult(s, text, result, usedFallback){
   (result.simulated_reactions || []).forEach((r, idx) => {
     const el = document.createElement('div');
     el.className = 'reaction';
-    el.style.animationDelay = (idx*0.35) + 's';
+    el.style.animationDelay = (Math.min(idx, 6)*0.25) + 's';
     el.innerHTML = '<b>' + (r.author || '익명') + '</b>' + (r.text || '');
     box.appendChild(el);
   });
