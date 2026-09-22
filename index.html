@@ -291,7 +291,7 @@
         <div><b>0</b><span>팔로워</span></div>
         <div><b>6</b><span>단계</span></div>
       </div>
-      <span class="goal-badge">목표: 팔로워 10,000명</span>
+      <span class="goal-badge">목표: 팔로워 20,000명</span>
       <p class="intro-desc">당신은 이 계정의 관리자입니다. 6번의 선택으로 팔로워를 최대한 늘려보세요. 단, 위험도가 너무 오르면 계정이 정지됩니다.</p>
       <button class="btn btn-primary" onclick="startGame()">시작하기</button>
     </div>
@@ -456,7 +456,7 @@ const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4n71bcGolD8wN
 /* ---- 부적절한 표현 필터 (욕설·성적 표현 감지) ---- */
 const BANNED_TERMS = [
   '씨발','씨팔','시발','시팔','ㅅㅂ','ㅄ','병신','ㅂㅅ','지랄','좆','좃',
-  '개새끼','개새','썅','미친놈','미친년','염병','걸레같','걸레년',
+  '개새끼','개새','썅','미친놈','미친년','염병','씹','걸레같','걸레년',
   '보지','자지','섹스','성기','강간','야동','자위','딸감','성폭행','19금'
 ];
 function normalizeForFilter(text){
@@ -630,20 +630,23 @@ function applyResult(s, text, result, usedFallback, apiErrorMsg){
   const reactionCount = (result.simulated_reactions || []).length;
 
   // 너무 짧고 성의 없는 글은 화제성 값과 무관하게 강제로 할인 (짧은 글로 팔로워 파밍하는 것 방지)
-  const lengthFactor = Math.max(0.15, Math.min(1, text.length / 40));
+  const lengthFactor = Math.max(0.15, Math.min(1, text.length / 20));
   const ratio = rawRatio * lengthFactor;
 
   // 멘션(댓글) 증폭: 반응이 많이 달릴수록(화제성이 클수록) 변화폭도 커짐
   const mentionBoost = 1 + Math.max(0, reactionCount - 1) * 0.12;
   // 팔로워 스노우볼: 커질수록 더 크게 튐. 단, 이탈(음수)에는 스노우볼을 적용하지 않음
-  const networkBoost = ratio >= 0 ? (1 + Math.min(state.fame / 4000, 0.6)) : 1;
+  // 팔로워 스노우볼: 계정이 커질수록 같은 글이라도 파급력(상승폭) 자체가 커짐. 이탈(음수)에는 적용 안 함
+  const networkBoost = ratio >= 0 ? (1 + Math.min(state.fame / 5000, 2.0)) : 1;
+  // 위험도도 마찬가지로 계정이 커질수록 같은 실수의 파급력(하락폭)이 커짐
+  const riskNetworkBoost = 1 + Math.min(state.fame / 8000, 1.0);
 
   const followerDelta = Math.round(s.followerMax * ratio * mentionBoost * networkBoost);
 
   // 위험도: A(정직)는 신뢰를 다시 쌓는 것으로 보고 소폭 감소, B/C는 기존대로 증가
   const RISK_RATIO_BY_CLASS = { A: -0.15, B: 0.4, C: 0.85 };
   const riskRatio = (result.classification in RISK_RATIO_BY_CLASS) ? RISK_RATIO_BY_CLASS[result.classification] : ratio;
-  const riskDelta = Math.round(s.riskMax * riskRatio);
+  const riskDelta = Math.round(s.riskMax * riskRatio * riskNetworkBoost);
 
   state.fame = Math.max(0, state.fame + followerDelta);
   state.risk = Math.max(0, state.risk + riskDelta);
@@ -738,7 +741,7 @@ const CONSEQUENCES = [
 
 /* ---- 종합 점수: 팔로워(성장) 60점 + 정직도(A/B/C 이력) 40점 ---- */
 function computeFinalScore(){
-  const FOLLOWER_GOAL = 10000;
+  const FOLLOWER_GOAL = 20000;
   const followerScore = Math.min(state.fame / FOLLOWER_GOAL, 1) * 60;
 
   const weights = { A: 1, B: 0.5, C: 0 };
@@ -802,10 +805,10 @@ async function renderEnding(){
         <span><b>${score.ethicsScore}</b>/40 · 정직도</span>
       </div>
     </div>`;
-  if(fame >= 10000){
+  if(fame >= 20000){
     html += `
       <div class="end-hero">
-        <div class="display" style="color:var(--accent)">축하합니다!<br>팔로워 10,000명 달성</div>
+        <div class="display" style="color:var(--accent)">축하합니다!<br>팔로워 20,000명 달성</div>
         <p>당신은 '네임드' 계정이 되었습니다. 그런데—</p>
       </div>
       ${scoreCardHtml}
