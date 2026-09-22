@@ -221,6 +221,19 @@
   .btn-inline-spinner{ display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; }
 
   .loading-block{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:70px 20px; text-align:center; flex:1; }
+
+  .resume-backdrop{
+    position:absolute; inset:0; background:rgba(38,38,38,0.45);
+    display:none; align-items:flex-end; justify-content:center; z-index:60;
+    border-radius: var(--radius-frame);
+  }
+  @media(max-width:440px){ .resume-backdrop{ border-radius:0; } }
+  .resume-backdrop.open{ display:flex; }
+  .resume-card{ background:#fff; width:100%; max-width:400px; border-radius:16px 16px 0 0; padding:22px 20px 26px; text-align:center; }
+  .resume-title{ font-size:16px; font-weight:800; color:var(--text-hi); margin-bottom:6px; }
+  .resume-desc{ font-size:12.5px; color:var(--text-lo); margin:0 0 18px; }
+  .resume-actions{ display:flex; gap:10px; }
+  .resume-actions .btn{ flex:1; }
   .loading-block p{ font-size:13px; color:var(--text-lo); margin:0; }
   button:focus-visible, textarea:focus-visible{ outline:3px solid #1675d1; outline-offset:3px; }
   html{ display:block; padding:0; }
@@ -257,6 +270,16 @@
 <body>
 
 <div class="phone">
+  <div class="resume-backdrop" id="resumeBackdrop">
+    <div class="resume-card">
+      <div class="resume-title">이어서 진행하시겠어요?</div>
+      <p class="resume-desc" id="resumeDesc">저장된 진행 상황이 있습니다.</p>
+      <div class="resume-actions">
+        <button class="btn btn-ghost" onclick="startFreshFromResume()">처음부터</button>
+        <button class="btn btn-primary" onclick="resumeFromSaved()">이어하기</button>
+      </div>
+    </div>
+  </div>
   <header>
     <div class="topbar">
       <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
@@ -381,7 +404,7 @@
   </section>
 
   <div class="bottomnav">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+    <svg onclick="resetGame()" role="button" aria-label="처음 화면으로" tabindex="0" style="cursor:pointer;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
@@ -451,7 +474,7 @@ const STAGES = [
 
 const RISK_GAMEOVER = 80;
 const RISK_WARN = 60;
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx0-6EQB4_6smTVV53JOpgE2kP6E5oY7NB_RO1ZddA6SPnn4glWabKghOGkuTUTWXXn/exec';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4n71bcGolD8wN-Tw2PK5tA66JjUxDccU-hy86R1ANGNKlWd1of_I0NvuxbsIGL2ij/exec';
 
 /* ---- 부적절한 표현 필터 (욕설·성적 표현 감지) ---- */
 const BANNED_TERMS = [
@@ -503,12 +526,29 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const saved = loadSession();
   if(saved && saved.stage < STAGES.length && saved.risk < RISK_GAMEOVER){
-    state = saved;
+    pendingResume = saved;
+    $('resumeDesc').textContent = (saved.stage+1) + '단계까지 · 팔로워 ' + saved.fame.toLocaleString() + '명';
+    $('resumeBackdrop').classList.add('open');
+  }
+});
+
+let pendingResume = null;
+function resumeFromSaved(){
+  if(pendingResume){
+    state = pendingResume;
     renderStage();
     updateGauges();
     showScreen('stage');
   }
-});
+  $('resumeBackdrop').classList.remove('open');
+  pendingResume = null;
+}
+function startFreshFromResume(){
+  clearSession();
+  $('resumeBackdrop').classList.remove('open');
+  pendingResume = null;
+  showScreen('intro');
+}
 
 /* ---- 게이지/진행 표시 ---- */
 function buildDots(){
