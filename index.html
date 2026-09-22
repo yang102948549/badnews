@@ -451,7 +451,7 @@ const STAGES = [
 
 const RISK_GAMEOVER = 80;
 const RISK_WARN = 60;
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwock4wbKNHm1ZGaVpttQopRxnmtT_0Rvh68ftbQ2eGOgnkL_PQqZYtF9208SNFRe3T/exec';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4n71bcGolD8wN-Tw2PK5tA66JjUxDccU-hy86R1ANGNKlWd1of_I0NvuxbsIGL2ij/exec';
 
 /* ---- 부적절한 표현 필터 (욕설·성적 표현 감지) ---- */
 const BANNED_TERMS = [
@@ -475,6 +475,24 @@ function showScreen(id){
   $(id).classList.add('active');
 }
 
+/* ---- 새로고침해도 진행 상황 유지 (sessionStorage) ---- */
+const SESSION_KEY = 'yangstagram_state_v1';
+function saveSession(){
+  try{ sessionStorage.setItem(SESSION_KEY, JSON.stringify(state)); }catch(e){}
+}
+function clearSession(){
+  try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
+}
+function loadSession(){
+  try{
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    if(typeof parsed.stage !== 'number' || typeof parsed.fame !== 'number') return null;
+    return parsed;
+  }catch(e){ return null; }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('input', function(e){
     if(e.target.id === 'answerInput'){
@@ -482,6 +500,14 @@ window.addEventListener('DOMContentLoaded', () => {
       $('profanityWarn').style.display = 'none';
     }
   });
+
+  const saved = loadSession();
+  if(saved && saved.stage < STAGES.length && saved.risk < RISK_GAMEOVER){
+    state = saved;
+    renderStage();
+    updateGauges();
+    showScreen('stage');
+  }
 });
 
 /* ---- 게이지/진행 표시 ---- */
@@ -512,11 +538,12 @@ function updateGauges(){
 
 function startGame(){
   state = { stage:0, fame:0, risk:0, history:[] };
+  saveSession();
   updateGauges();
   renderStage();
   showScreen('stage');
 }
-function resetGame(){ showScreen('intro'); }
+function resetGame(){ clearSession(); showScreen('intro'); }
 
 function renderStage(){
   const s = STAGES[state.stage];
@@ -531,14 +558,24 @@ function renderStage(){
 
 /* ---- GAS 백엔드를 통한 판정 요청 (API 키는 서버에만 있음) ---- */
 async function judgeWithGemini(stageIndex, text){
-  const res = await fetch(GAS_WEB_APP_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // CORS preflight 회피용
-    body: JSON.stringify({ stageIndex: stageIndex, text: text })
-  });
-  const data = await res.json();
-  if(data.error) throw new Error(data.error);
-  return data;
+  const body = JSON.stringify({ stageIndex: stageIndex, text: text });
+  let lastErr;
+  for(let attempt = 0; attempt < 2; attempt++){
+    try{
+      const res = await fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // CORS preflight 회피용
+        body: body
+      });
+      const data = await res.json();
+      if(data.error) throw new Error(data.error);
+      return data;
+    }catch(err){
+      lastErr = err;
+      if(attempt === 0) await new Promise(r => setTimeout(r, 700)); // 다수 동시 접속 시 일시 오류 대비 1회 재시도
+    }
+  }
+  throw lastErr;
 }
 
 /* ---- 폴백: API 실패 시 사용하는 간이 키워드 판정 ----
@@ -589,27 +626,32 @@ async function submitAnswer(){
 }
 
 function applyResult(s, text, result, usedFallback, apiErrorMsg){
-  const ratio = Math.max(0, Math.min(1, Number(result.follower_ratio) || 0));
+  const rawRatio = Math.max(-1, Math.min(1, Number(result.follower_ratio) || 0));
   const reactionCount = (result.simulated_reactions || []).length;
 
-  // 멘션(댓글) 증폭: 반응이 많이 달릴수록(화제성이 클수록) 증가량도 커짐
+  // 너무 짧고 성의 없는 글은 화제성 값과 무관하게 강제로 할인 (짧은 글로 팔로워 파밍하는 것 방지)
+  const lengthFactor = Math.max(0.15, Math.min(1, text.length / 40));
+  const ratio = rawRatio * lengthFactor;
+
+  // 멘션(댓글) 증폭: 반응이 많이 달릴수록(화제성이 클수록) 변화폭도 커짐
   const mentionBoost = 1 + Math.max(0, reactionCount - 1) * 0.12;
-  // 팔로워 스노우볼: 이미 많이 컸을수록 같은 화제성이라도 더 크게 튐 (1.6배 상한)
-  const networkBoost = 1 + Math.min(state.fame / 4000, 0.6);
+  // 팔로워 스노우볼: 커질수록 더 크게 튐. 단, 이탈(음수)에는 스노우볼을 적용하지 않음
+  const networkBoost = ratio >= 0 ? (1 + Math.min(state.fame / 4000, 0.6)) : 1;
 
   const followerDelta = Math.round(s.followerMax * ratio * mentionBoost * networkBoost);
 
-  // 위험도는 팔로워 증가치가 아니라 '판정 등급(A/B/C)' 자체로 결정 — 정직(A)이면 위험도 0
-  const RISK_RATIO_BY_CLASS = { A: 0, B: 0.4, C: 0.85 };
+  // 위험도: A(정직)는 신뢰를 다시 쌓는 것으로 보고 소폭 감소, B/C는 기존대로 증가
+  const RISK_RATIO_BY_CLASS = { A: -0.15, B: 0.4, C: 0.85 };
   const riskRatio = (result.classification in RISK_RATIO_BY_CLASS) ? RISK_RATIO_BY_CLASS[result.classification] : ratio;
   const riskDelta = Math.round(s.riskMax * riskRatio);
 
-  state.fame += followerDelta;
-  state.risk += riskDelta;
+  state.fame = Math.max(0, state.fame + followerDelta);
+  state.risk = Math.max(0, state.risk + riskDelta);
   state.history[state.stage] = { text: text, classification: result.classification };
+  saveSession();
 
   $('postBody').textContent = text;
-  $('likeStat').textContent = Math.round(followerDelta*0.15).toLocaleString();
+  $('likeStat').textContent = Math.round(Math.max(0, followerDelta)*0.15).toLocaleString();
   $('shareStat').textContent = reactionCount;
   $('commentsLabel').textContent = reactionCount ? '댓글 ' + reactionCount + '개' : '아직 댓글이 없습니다';
 
@@ -625,8 +667,8 @@ function applyResult(s, text, result, usedFallback, apiErrorMsg){
     box.appendChild(el);
   });
 
-  $('deltaFame').textContent = '+' + followerDelta.toLocaleString();
-  $('deltaRisk').textContent = '+' + riskDelta;
+  $('deltaFame').textContent = (followerDelta >= 0 ? '+' : '') + followerDelta.toLocaleString();
+  $('deltaRisk').textContent = (riskDelta >= 0 ? '+' : '') + riskDelta;
   $('feedbackText').textContent = '[' + result.classification + '] ' + result.feedback_to_student;
 
   const warnEl = $('fallbackWarn');
@@ -649,6 +691,7 @@ function applyResult(s, text, result, usedFallback, apiErrorMsg){
 
 async function proceed(){
   if(state.risk >= RISK_GAMEOVER){
+    clearSession();
     $('goFame').textContent = state.fame.toLocaleString();
     $('goStage').textContent = (state.stage+1) + '단계';
     showScreen('gameover');
@@ -656,9 +699,11 @@ async function proceed(){
   }
   if(state.stage < STAGES.length - 1){
     state.stage += 1;
+    saveSession();
     renderStage();
     showScreen('stage');
   } else {
+    clearSession();
     showScreen('ending');
     $('endingScroll').innerHTML = '<div class="loading-block"><span class="spinner dark spinner-lg"></span><p>지금까지 남긴 게시물을 다시 살펴보고 있어요.</p></div>';
     await renderEnding();
